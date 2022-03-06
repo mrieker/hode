@@ -1,0 +1,192 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+# ./master.sh -sim pswreg.sim
+# takes about 2s to run
+
+module pswreg
+
+source lib.sim
+
+# See if the condition code can be properly tested by a branch
+#  input:
+#   value = its current value as stored in PSW
+#   code  = 3-bit branch code for the condition
+proc BranchTest {value code} {
+    if {$value == 0} {
+        # carry bit is clear
+        # BCS should be false
+        ForceIRPair xxx${code}xxxxxxxxx0
+        run 100
+        Verify BT 0
+        # BCC should be true
+        ForceIRPair xxx${code}xxxxxxxxx1
+        run 100
+        Verify BT 1
+    } else {
+        # carry bit is set
+        # BCS should be true
+        ForceIRPair xxx${code}xxxxxxxxx0
+        run 100
+        Verify BT 1
+        # BCC should be false
+        ForceIRPair xxx${code}xxxxxxxxx1
+        run 100
+        Verify BT 0
+    }
+}
+
+# format val as a 16-char binary string
+proc FormatBin {val one} {
+    set bin ""
+    for {set mask [expr 0x8000]} {$mask >= 1} {set mask [expr $mask / 2]} {
+        if {$val & $mask} {
+            set bin "${bin}${one}"
+        } else {
+            set bin "${bin}0"
+        }
+    }
+    return $bin
+}
+
+########################
+#  Script Starts Here  #
+########################
+
+# verify load/store
+force ALUWE 0
+force CLK2 0
+force _IECLR 1
+force _RE 1
+force WE 0
+set lastd ""
+for {set data 0} {$data < 65536} {set data [expr $data + 12345]} {
+    set datab [FormatBin $data 1]
+    echo "writing $datab"
+
+    # clocking with WE=0 should not change anything
+    force D 0bxxxxxxxxxxxxxxxx
+    run 100
+    force CLK2 1
+    run 100
+    force CLK2 0
+    if {$lastd != ""} {
+        force _RE 0
+        run 100
+        Verify Q15 [string range $lastd 0 0]
+        Verify Q30 [string range $lastd 12 15]
+        force _RE 1
+    }
+
+    # clock in new value with WE=1
+    force WE 1
+    force D 0b$datab
+    run 100
+    force CLK2 1
+    run 100
+    force CLK2 0
+    force WE 0
+    force D 0bxxxxxxxxxxxxxxxx
+
+    # reading with _RE=1 should return ones for all outputs
+    Verify Q15 1
+    Verify Q30 1111
+
+    # verify correct value with _RE=0
+    force _RE 0
+    run 100
+    set sb  [expr $data & 0x800F]
+    set n   [expr ($data & 8) / 8]
+    set z   [expr ($data & 4) / 4]
+    set v   [expr ($data & 2) / 2]
+    set c   [expr ($data & 1) / 1]
+    set cz  [expr $c | $z]
+    set nv  [expr $n ^ $v]
+    set nvz [expr $nv | $z]
+    set sb  [expr $sb + $cz * 16 + $nv * 32 + $nvz * 64]
+    set lastd [FormatBin $sb 1]
+    Verify Q15 [string range $lastd 0 0]
+    Verify Q30 [string range $lastd 12 15]
+
+    # make sure IECLR works
+    force _IECLR 0
+    run 100
+    force CLK2 1
+    run 100
+    force CLK2 0
+    force _IECLR 1
+    set sbnoie [expr $sb & 0x7FFF]
+    Verify Q15 [string range [FormatBin $sbnoie 1] 0 0]
+    Verify Q30 [string range [FormatBin $sbnoie 1] 12 15]
+
+    # restore original value
+    force D 0b$datab
+    force _RE 1
+    force WE 1
+    run 100
+    force CLK2 1
+    run 100
+    force CLK2 0
+    force WE 0
+    run 100
+}
+
+# verify condition code loading and branch conditions
+force ALUWE 1
+force CLK2 0
+force _IECLR 1
+force _RE 0
+force WE 0
+for {set n 0} {$n < 2} {incr n} {
+    force ALUN $n
+    for {set z 0} {$z < 2} {incr z} {
+        force ALUZ $z
+        for {set v 0} {$v < 2} {incr v} {
+            force ALUV $v
+            for {set c 0} {$c < 2} {incr c} {
+                echo "NZVC $n$z$v$c"
+                force ALUC $c
+                run 120
+                force CLK2 1
+                run 120
+                force CLK2 0
+                echo "  => [examine Q30]"
+                Verify N $n
+                Verify Z $z
+                Verify V $v
+                Verify C $c
+
+                set cz  [expr $c  | $z]
+                set nv  [expr $n  ^ $v]
+                set nvz [expr $nv | $z]
+
+                BranchTest $z   001
+                BranchTest $nv  010
+                BranchTest $nvz 011
+                BranchTest $c   100
+                BranchTest $cz  101
+                BranchTest $n   110
+                BranchTest $v   111
+            }
+        }
+    }
+}
+
+# all done
+echo "SUCCESS"

@@ -1,0 +1,75 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+
+proc RunVer {q} {
+    run 36
+    set gotq [examine Q]
+    set got_q [examine _Q]
+    if {"$gotq$got_q" != "$q[expr 1 - $q]"} {
+        echo $gotq $got_q not $q
+        pause
+    }
+}
+
+module DFF
+
+monitor D T _PC Q _Q
+
+force   D 0bx
+force   T 0bx
+force _PS 1
+force _PC 0
+RunVer 0        ;# should preclear Q=0
+
+force   T 0
+RunVer 0        ;# preclear still in effect
+
+force _PC 1
+force   D 1
+RunVer 0        ;# get ready to load in a 1
+
+force   T 1
+RunVer 1        ;# data gets loaded Q=1
+
+force   T 0
+RunVer 1
+force   D 0bx
+RunVer 1
+force   D 0
+RunVer 1
+force   T 1
+RunVer 0
+force   T 0
+RunVer 0
+
+module DLat
+monitor D G Q _Q
+force D 0
+force G 0
+run 24
+force G 1
+RunVer 0
+force D 1
+force G 0
+RunVer 0
+force G 1
+RunVer 1
+
+echo "SUCCESS"

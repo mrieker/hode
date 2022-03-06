@@ -1,0 +1,57 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+# test all ADD operands to the aluboard
+#  ./netgen.sh aluboard.mod -sim aluaddall.sim
+# takes about 12 mins to run
+
+module alueight
+
+set cycletime 200
+
+source lib.sim
+
+force SHR 0bX
+force IR 0xXXXX
+force _IR 0xXXXX
+force ADD 1
+force BONLY 0
+force IRFC 0
+
+for {set a 0} {$a < 256} {incr a} {
+    echo A $a
+    force A $a
+    for {set b 0} {$b < 256} {incr b} {
+        force B $b
+        for {set c 0} {$c < 2} {incr c} {
+            force CIN $c
+            run $cycletime
+            set expect [expr $a+$b+$c]
+            set expsum [FormatBin $expect 1 8]
+            set expcou [expr $expect >> 8]
+            set actsum [examine S]
+            set actcou [examine COUT]
+            if {"$actcou$actsum" != "$expcou$expsum"} {
+                echo ERROR adding $a $b $c
+                pause
+            }
+        }
+    }
+}
+echo SUCCESS

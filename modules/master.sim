@@ -1,0 +1,99 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+source assemble.tcl
+assemble umul.asm
+
+module master
+
+# convert string of binary digits to integer equivalent
+proc FromBin {digits} {
+    set r 0
+    foreach d [split $digits {}] {
+        incr r $r
+        incr r $d
+    }
+    return $r
+}
+
+# convert string of binary digits to hexadecimal string
+# some bits may be 'x' or 'X' making the hex digit 'X'
+proc BinToHex {bin} {
+    set hex ""
+    for {set i 0} {$i + 4 <= [string length $bin]} {incr i 4} {
+        set bits [string range $bin $i [expr $i + 3]]
+        switch $bits {
+            0000 { set hex ${hex}0 }
+            0001 { set hex ${hex}1 }
+            0010 { set hex ${hex}2 }
+            0011 { set hex ${hex}3 }
+            0100 { set hex ${hex}4 }
+            0101 { set hex ${hex}5 }
+            0110 { set hex ${hex}6 }
+            0111 { set hex ${hex}7 }
+            1000 { set hex ${hex}8 }
+            1001 { set hex ${hex}9 }
+            1010 { set hex ${hex}A }
+            1011 { set hex ${hex}B }
+            1100 { set hex ${hex}C }
+            1101 { set hex ${hex}D }
+            1110 { set hex ${hex}E }
+            1111 { set hex ${hex}F }
+            default { set hex ${hex}X }
+        }
+    }
+    return $hex
+}
+
+# write out assembly to memory
+foreach {key val} [array get memquads] {
+    echo writing $val "=>" [format "%04X" [expr $key * 8]]
+    raspi raspi/rbc/rasbd load [format "%04X" [expr $key * 8]] \
+        [string range $val 14 15] [string range $val 12 13] [string range $val 10 11] [string range $val  8  9] \
+        [string range $val  6  7] [string range $val  4  5] [string range $val  2  3] [string range $val  0  1]
+}
+
+raspi raspi/rbc/rasbd shadow enable
+raspi raspi/rbc/rasbd printstate
+
+#monitor _psw_re/rasbd
+#monitor q/rodd/regpair/r6r7
+#monitor ddat/rbc/rasbd DDAT/regpair/r6r7 q/rodd/regpair/r6r7
+#monitor A/alueight/alulo B/alueight/alulo IRFC/alueight/alulo ADD/alueight/alulo BONLY/alueight/alulo S/alueight/alulo dout/alulo dbus/alulo dbus/rasbd mdbus
+#monitor q/revn/regpair/r6r7 A/alueight/alulo B/alueight/alulo CIN/alueight/alulo IRFC/alueight/alulo ADD/alueight/alulo BONLY/alueight/alulo S/alueight/alulo
+#monitor irbus/pbc/pswbd rawshrin/pbc/pswbd rawshrin/aluhi O15/csela/aluhi I14/csela/aluhi A/alueight/aluhi SHR/alueight/aluhi _doingshr/alueight/aluhi S/alueight/aluhi
+#monitor fetch1q/seq/seqbd bcc1q/seq/seqbd
+
+run 500
+while {true} {
+    run 1000
+    if {[examine fetch1q/seq/seqbd]} {
+        set r0 [BinToHex [examine q/revn/regpair/r0r1]]
+        set r1 [BinToHex [examine q/rodd/regpair/r0r1]]
+        set r2 [BinToHex [examine q/revn/regpair/r2r3]]
+        set r3 [BinToHex [examine q/rodd/regpair/r2r3]]
+        set r4 [BinToHex [examine q/revn/regpair/r4r5]]
+        set r5 [BinToHex [examine q/rodd/regpair/r4r5]]
+        set r6 [BinToHex [examine q/revn/regpair/r6r7]]
+        set r7 [BinToHex [examine q/rodd/regpair/r6r7]]
+        echo "$now R0=$r0 R1=$r1 R2=$r2 R3=$r3 R4=$r4 R5=$r5 R6=$r6 R7=$r7"
+    }
+    if {[examine HALT/raspi/rbc/rasbd]} break
+}
+echo HALTED

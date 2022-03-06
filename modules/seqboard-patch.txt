@@ -1,0 +1,47 @@
+
+patch old seqboard 2021-06-05 to not write pc for arithmetic instructions
+    and not increment pc when doing ldimm of pc
+
+
+    rdnotpc     = ~(IR[7] & IR[8] & IR[9]);
+    _arithnotpc = ~(arith1q & rdnotpc);
+
+    _loadimm    = ~(IR[12] & IR[11] & IR[10] & rdnotpc & _IR[6] & _IR[5] & _IR[4] & _IR[3] & _ir2 & _IR[1] & _IR[0]);
+                                                  ^
+                                                  new term
+
+    GPRS_WED    = ~(_arithnotpc & _lda1q & _load2q & _rdps1q);
+                         ^
+                         replaces _arith1q
+
+
+
+
+
+Patch Board
+
+    top gate        _arithnotpc = ~(arith1q & rdnotpc);
+
+        GPRS_WED bus
+            Q 185  16.9,12.7        *  <  _arithnotpc
+            _arith1q connection: D 847
+
+        arith1q flipflop            *  >  arith1q
+            Q68 6.1,11.6 collector
+
+        _loadimm nand bus           *  <  rdnotpc via diode
+            Q 98  2.1,1.4
+
+                                    *  <  rdnotpc direct
+
+    bottom gate     rdnotpc = ~(IR[7] & IR[8] & IR[9]);
+
+                    *  <  rdnotpc direct
+
+        icon 19     *  >  IR[9]
+
+        icon 21     *  >  IR[8]
+
+        icon 24     *  >  IR[7]
+
+

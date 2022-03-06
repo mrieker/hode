@@ -1,0 +1,424 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L CONN_01X06 J2
+U 1 1 610ED061
+P 2400 2150
+F 0 "J2" H 2400 2500 50  0000 C CNN
+F 1 "CONN_01X06" V 2500 2150 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 2400 2150 50  0001 C CNN
+F 3 "" H 2400 2150 50  0001 C CNN
+	1    2400 2150
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J7
+U 1 1 610ED12D
+P 3400 2150
+F 0 "J7" H 3400 2500 50  0000 C CNN
+F 1 "CONN_01X06" V 3500 2150 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 3400 2150 50  0001 C CNN
+F 3 "" H 3400 2150 50  0001 C CNN
+	1    3400 2150
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J3
+U 1 1 610ED175
+P 2400 2950
+F 0 "J3" H 2400 3300 50  0000 C CNN
+F 1 "CONN_01X06" V 2500 2950 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 2400 2950 50  0001 C CNN
+F 3 "" H 2400 2950 50  0001 C CNN
+	1    2400 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J4
+U 1 1 610ED23B
+P 2400 3750
+F 0 "J4" H 2400 4100 50  0000 C CNN
+F 1 "CONN_01X06" V 2500 3750 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 2400 3750 50  0001 C CNN
+F 3 "" H 2400 3750 50  0001 C CNN
+	1    2400 3750
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J5
+U 1 1 610ED27F
+P 2400 4550
+F 0 "J5" H 2400 4900 50  0000 C CNN
+F 1 "CONN_01X06" V 2500 4550 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 2400 4550 50  0001 C CNN
+F 3 "" H 2400 4550 50  0001 C CNN
+	1    2400 4550
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J6
+U 1 1 610ED2D1
+P 2400 5350
+F 0 "J6" H 2400 5700 50  0000 C CNN
+F 1 "CONN_01X06" V 2500 5350 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 2400 5350 50  0001 C CNN
+F 3 "" H 2400 5350 50  0001 C CNN
+	1    2400 5350
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J8
+U 1 1 610ED333
+P 3400 2950
+F 0 "J8" H 3400 3300 50  0000 C CNN
+F 1 "CONN_01X06" V 3500 2950 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 3400 2950 50  0001 C CNN
+F 3 "" H 3400 2950 50  0001 C CNN
+	1    3400 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J9
+U 1 1 610ED3C1
+P 3400 3750
+F 0 "J9" H 3400 4100 50  0000 C CNN
+F 1 "CONN_01X06" V 3500 3750 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 3400 3750 50  0001 C CNN
+F 3 "" H 3400 3750 50  0001 C CNN
+	1    3400 3750
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J10
+U 1 1 610ED41F
+P 3400 4550
+F 0 "J10" H 3400 4900 50  0000 C CNN
+F 1 "CONN_01X06" V 3500 4550 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 3400 4550 50  0001 C CNN
+F 3 "" H 3400 4550 50  0001 C CNN
+	1    3400 4550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Screw_Terminal_1x02 J1
+U 1 1 610ED535
+P 1100 2000
+F 0 "J1" H 1100 2250 50  0000 C TNN
+F 1 "Screw_Terminal_1x02" V 950 2000 50  0000 C TNN
+F 2 "Connectors:AK300-2" H 1100 1775 50  0001 C CNN
+F 3 "" H 1075 2000 50  0001 C CNN
+	1    1100 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J11
+U 1 1 610ED5E2
+P 3400 5350
+F 0 "J11" H 3400 5700 50  0000 C CNN
+F 1 "CONN_01X06" V 3500 5350 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x06_Pitch2.54mm" H 3400 5350 50  0001 C CNN
+F 3 "" H 3400 5350 50  0001 C CNN
+	1    3400 5350
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR2
+U 1 1 610ED71F
+P 1400 2200
+F 0 "#PWR2" H 1400 1950 50  0001 C CNN
+F 1 "GND" H 1400 2050 50  0000 C CNN
+F 2 "" H 1400 2200 50  0001 C CNN
+F 3 "" H 1400 2200 50  0001 C CNN
+	1    1400 2200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1300 2100 1400 2100
+Wire Wire Line
+	1400 2100 1400 2200
+$Comp
+L VCC #PWR1
+U 1 1 610EE69A
+P 1400 1800
+F 0 "#PWR1" H 1400 1650 50  0001 C CNN
+F 1 "VCC" H 1400 1950 50  0000 C CNN
+F 2 "" H 1400 1800 50  0001 C CNN
+F 3 "" H 1400 1800 50  0001 C CNN
+	1    1400 1800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1400 1800 1400 1900
+Wire Wire Line
+	1400 1900 1300 1900
+$Comp
+L VCC #PWR4
+U 1 1 610EE7C1
+P 2100 1800
+F 0 "#PWR4" H 2100 1650 50  0001 C CNN
+F 1 "VCC" H 2100 1950 50  0000 C CNN
+F 2 "" H 2100 1800 50  0001 C CNN
+F 3 "" H 2100 1800 50  0001 C CNN
+	1    2100 1800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2100 1800 2100 5300
+Wire Wire Line
+	2100 5300 2200 5300
+Wire Wire Line
+	2200 5200 2100 5200
+Connection ~ 2100 5200
+Wire Wire Line
+	2200 5100 2100 5100
+Connection ~ 2100 5100
+Wire Wire Line
+	2200 4500 2100 4500
+Connection ~ 2100 4500
+Wire Wire Line
+	2200 4400 2100 4400
+Connection ~ 2100 4400
+Wire Wire Line
+	2200 4300 2100 4300
+Connection ~ 2100 4300
+Wire Wire Line
+	2200 3700 2100 3700
+Connection ~ 2100 3700
+Wire Wire Line
+	2200 3600 2100 3600
+Connection ~ 2100 3600
+Wire Wire Line
+	2200 3500 2100 3500
+Connection ~ 2100 3500
+Wire Wire Line
+	2200 2900 2100 2900
+Connection ~ 2100 2900
+Wire Wire Line
+	2200 2800 2100 2800
+Connection ~ 2100 2800
+Wire Wire Line
+	2200 2700 2100 2700
+Connection ~ 2100 2700
+Wire Wire Line
+	2200 2100 2100 2100
+Connection ~ 2100 2100
+Wire Wire Line
+	2200 2000 2100 2000
+Connection ~ 2100 2000
+Wire Wire Line
+	2200 1900 2100 1900
+Connection ~ 2100 1900
+$Comp
+L GND #PWR3
+U 1 1 610F0AC4
+P 2000 5700
+F 0 "#PWR3" H 2000 5450 50  0001 C CNN
+F 1 "GND" H 2000 5550 50  0000 C CNN
+F 2 "" H 2000 5700 50  0001 C CNN
+F 3 "" H 2000 5700 50  0001 C CNN
+	1    2000 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2000 5700 2000 2200
+Wire Wire Line
+	2000 2200 2200 2200
+Wire Wire Line
+	2200 2300 2000 2300
+Connection ~ 2000 2300
+Wire Wire Line
+	2200 2400 2000 2400
+Connection ~ 2000 2400
+Wire Wire Line
+	2200 3000 2000 3000
+Connection ~ 2000 3000
+Wire Wire Line
+	2200 3100 2000 3100
+Connection ~ 2000 3100
+Wire Wire Line
+	2200 3200 2000 3200
+Connection ~ 2000 3200
+Wire Wire Line
+	2200 3800 2000 3800
+Connection ~ 2000 3800
+Wire Wire Line
+	2200 3900 2000 3900
+Connection ~ 2000 3900
+Wire Wire Line
+	2200 4000 2000 4000
+Connection ~ 2000 4000
+Wire Wire Line
+	2200 4600 2000 4600
+Connection ~ 2000 4600
+Wire Wire Line
+	2200 4700 2000 4700
+Connection ~ 2000 4700
+Wire Wire Line
+	2200 4800 2000 4800
+Connection ~ 2000 4800
+Wire Wire Line
+	2200 5400 2000 5400
+Connection ~ 2000 5400
+Wire Wire Line
+	2200 5500 2000 5500
+Connection ~ 2000 5500
+Wire Wire Line
+	2200 5600 2000 5600
+Connection ~ 2000 5600
+$Comp
+L VCC #PWR6
+U 1 1 610F3240
+P 3100 1800
+F 0 "#PWR6" H 3100 1650 50  0001 C CNN
+F 1 "VCC" H 3100 1950 50  0000 C CNN
+F 2 "" H 3100 1800 50  0001 C CNN
+F 3 "" H 3100 1800 50  0001 C CNN
+	1    3100 1800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3100 1800 3100 5300
+Wire Wire Line
+	3100 5300 3200 5300
+Wire Wire Line
+	3200 5200 3100 5200
+Connection ~ 3100 5200
+Wire Wire Line
+	3200 5100 3100 5100
+Connection ~ 3100 5100
+Wire Wire Line
+	3200 4500 3100 4500
+Connection ~ 3100 4500
+Wire Wire Line
+	3200 4400 3100 4400
+Connection ~ 3100 4400
+Wire Wire Line
+	3200 4300 3100 4300
+Connection ~ 3100 4300
+Wire Wire Line
+	3200 3700 3100 3700
+Connection ~ 3100 3700
+Wire Wire Line
+	3200 3600 3100 3600
+Connection ~ 3100 3600
+Wire Wire Line
+	3200 3500 3100 3500
+Connection ~ 3100 3500
+Wire Wire Line
+	3200 2900 3100 2900
+Connection ~ 3100 2900
+Wire Wire Line
+	3200 2800 3100 2800
+Connection ~ 3100 2800
+Wire Wire Line
+	3200 2700 3100 2700
+Connection ~ 3100 2700
+Wire Wire Line
+	3200 2100 3100 2100
+Connection ~ 3100 2100
+Wire Wire Line
+	3200 2000 3100 2000
+Connection ~ 3100 2000
+Wire Wire Line
+	3200 1900 3100 1900
+Connection ~ 3100 1900
+$Comp
+L GND #PWR5
+U 1 1 610F4100
+P 3000 5700
+F 0 "#PWR5" H 3000 5450 50  0001 C CNN
+F 1 "GND" H 3000 5550 50  0000 C CNN
+F 2 "" H 3000 5700 50  0001 C CNN
+F 3 "" H 3000 5700 50  0001 C CNN
+	1    3000 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3000 5700 3000 2200
+Wire Wire Line
+	3000 2200 3200 2200
+Wire Wire Line
+	3200 2300 3000 2300
+Connection ~ 3000 2300
+Wire Wire Line
+	3200 2400 3000 2400
+Connection ~ 3000 2400
+Wire Wire Line
+	3200 3000 3000 3000
+Connection ~ 3000 3000
+Wire Wire Line
+	3200 3100 3000 3100
+Connection ~ 3000 3100
+Wire Wire Line
+	3200 3200 3000 3200
+Connection ~ 3000 3200
+Wire Wire Line
+	3200 3800 3000 3800
+Connection ~ 3000 3800
+Wire Wire Line
+	3200 3900 3000 3900
+Connection ~ 3000 3900
+Wire Wire Line
+	3200 4000 3000 4000
+Connection ~ 3000 4000
+Wire Wire Line
+	3200 4600 3000 4600
+Connection ~ 3000 4600
+Wire Wire Line
+	3200 4700 3000 4700
+Connection ~ 3000 4700
+Wire Wire Line
+	3200 4800 3000 4800
+Connection ~ 3000 4800
+Wire Wire Line
+	3200 5400 3000 5400
+Connection ~ 3000 5400
+Wire Wire Line
+	3200 5500 3000 5500
+Connection ~ 3000 5500
+Wire Wire Line
+	3200 5600 3000 5600
+Connection ~ 3000 5600
+$EndSCHEMATC

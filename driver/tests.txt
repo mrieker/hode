@@ -1,0 +1,31 @@
+
+# all tests require
+sudo insmod km/enabtsc.ko
+. ./iow56sns.si
+
+
+# worst-case timing
+./raspictl.armv7l -oddok wc2loop.hex
+
+
+# worst-case timing and print states
+./raspictl.armv7l -oddok -printstate -cpuhz 10000 wc2loop.hex
+
+
+# random number test for R4,R5,R6,R7
+./raspictl.armv7l -printstate randtest.hex
+
+
+# random number test for R4,R5,R6,R7
+#  print cycles every minute
+#  run at 72KHz
+./raspictl.armv7l randtest.hex -mintimes -cpuhz 72000
+
+
+# continuously write zeroes to R2 (uses paddles)
+sudo -E ./writezeroestorn.armv7l 2
+
+
+# test board stack of seq,ras,aluhi,alulo,reg23,reg45,reg67 (uses paddles)
+./raseqtest.sh -alu -cpuhz 200 -nopads -reg23 -reg45 -reg67
+

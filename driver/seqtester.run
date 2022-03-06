@@ -1,0 +1,1 @@
+nohup sudo ./seqtester -cpuhz 200 -loop < /dev/null > ~/seqt.200hz.log 2>&1 &

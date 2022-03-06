@@ -1,0 +1,1 @@
+nohup ./raspictl.armv7l -cpuhz 77000 -mintimes randtestall.hex < /dev/null > randtestall.log 2>&1 &

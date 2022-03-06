@@ -1,0 +1,160 @@
+
+    abbus: Conn
+         1  oo      abus[00]    bbus[00]
+         3  oo      abus[08]    bbus[08]
+         5  go                  abus[01]
+         7  oo      bbus[01]    abus[09]
+         9  go                  bbus[09]
+        11  oo      abus[02]    bbus[02]
+        13  go                  abus[10]
+        15  oo      bbus[10]    abus[03]
+        17  go                  bbus[03]
+        19  oo      abus[11]    bbus[11]
+        21  oo      abus[04]    bbus[04]
+        23  go                  abus[12]
+        25  oo      bbus[12]    abus[05]
+        27  go                  bbus[05]
+        29  oo      abus[13]    bbus[13]
+        31  go                  abus[06]
+        33  oo      bbus[06]    abus[14]
+        35  go                  bbus[14]
+        37  oo      abus[07]    bbus[07]
+        39  oo      abus[15]    bbus[15]
+
+    irbus: Conn
+         1  oo       ir[00]     _ir[00]
+         3  oo       ir[01]     _ir[01]
+         5  go                   ir[02]
+         7  oo      _ir[02]      ir[03]
+         9  go                  _ir[03]
+        11  oo       ir[04]     _ir[04]
+        13  go                   ir[05]
+        15  oo      _ir[05]      ir[06]
+        17  go                  _ir[06]
+        19  oo       ir[07]     _ir[07]
+        21  oo       ir[08]     _ir[08]
+        23  go                   ir[09]
+        25  oo      _ir[09]      ir[10]
+        27  go                  _ir[10]
+        29  oo       ir[11]     _ir[11]
+        31  go                   ir[12]
+        33  oo      _ir[12]      ir[13]
+        35  go                  _ir[13]
+        37  oo       ir[14]     _ir[14]
+        39  oo       ir[15]     _ir[15]
+
+    dbus: Conn
+         1  oo      dbus[15]    dbus[07]
+         3  oo      dbus[14]    dbus[06]
+         5  go                  dbus[13]
+         7  oo      dbus[05]    dbus[12]
+         9  go                  dbus[04]
+        11  oo      dbus[11]    dbus[03]
+        13  go                  dbus[10]
+        15  oo      dbus[02]    dbus[09]
+        17  go                  dbus[01]
+        19  oo      dbus[08]    dbus[00]
+
+        21  ii      I21:rawcin      # carry into alu[00]
+                    I22:rawcmid     # carry into alu[08]
+
+        23  go      O24:rawcmid     # carry outof alu[07]
+
+        25  oo      O25:rawcout     # carry outof alu[15]
+                    O26:rawvout     # carry outof alu[14]
+
+        27  gi      I28:rawshrmid   # shift right into alu[07]
+
+        29  ii      I29:rawshrin    # shift right into alu[15]
+                    I30:not used
+
+        31  go      O32:rawshrout   # shift right outof alu[00]
+
+        33  oi      O33:rawshrmid   # shift right outof alu[08]
+        35  gi
+        37  ii
+        39  ii
+
+    ctla: Conn
+         1  ii      I1:  IRQ            I2:  PSW_IE
+         3  ii      I3:  PSW_BT         I4:  RESET
+         5  gi                          I6:  CLK2
+         7  oo      O7:                 O8:  MEM_REB
+         9  go                          O10: PSW_ALUWE
+        11  oo      O11: ALU_IRFC       O12: GPRS_REB
+        13  go                          O14: BMUX_IRBROF
+        15  oo      O15: GPRS_WED       O16: MEM_READ
+        17  go                          O18: PSW_WE
+        19  oo      O19: HALT           O20: GPRS_REA
+        21  oo      O21:                O22: GPRS_RED2B
+        23  go                          O24: ALU_BONLY
+        25  oo      O25: BMUX_IRLSOF    O26: _PSW_RE
+        27  go                          O28: BMUX_CON__4
+        29  oo      O29: MEM_WORD       O30: ALU_ADD
+        31  go                          O32: GPRS_WE7
+        33  oo      O33: GPRS_REA7      O34: BMUX_CON_2
+        35  go                          O36: _IR_WE
+        37  oo      O37:                O38: BMUX_CON_0
+        39  oo      O39: MEM_WRITE      O40: _PSW_IECLR
+
+    gpio: Conn  (looking at backside of PI)
+                        5v   02 01  3.3v
+                        5v   04 03  gpio 02     > CLOCK
+                        gnd  06 05  gpio 03     > RESET
+        data[10]    gpio 14  08 07  gpio 04     data[00]
+        data[11]    gpio 15  10 09  gnd
+        data[14]    gpio 18  12 11  gpio 17     data[13]
+                        gnd  14 13  gpio 27
+          WORD >    gpio 23  16 15  gpio 22     > DENA
+          HALT >    gpio 24  18 17  3.3v
+                        gnd  20 19  gpio 10     data[06]
+          READ >    gpio 25  22 21  gpio 09     data[05]
+        data[04]    gpio 08  24 23  gpio 11     data[07]
+        data[03]    gpio 07  26 25  gnd
+                    gpio 01  28 27  gpio 00
+                        gnd  30 29  gpio 05     data[01]
+        data[08]    gpio 12  32 31  gpio 06     data[02]
+                        gnd  34 33  gpio 13     data[09]
+        data[12]    gpio 16  36 35  gpio 19     data[15]
+           IRQ <    gpio 20  38 37  gpio 26     < WRITE
+          QENA <    gpio 21  40 39  gnd
+
+
+    power: Conn
+                v v v g g g ()
+
+
+ALUBOARD:
+
+        CTLA
+    ABBUS   DBUS
+        IBUS
+
+
+RASBOARD,REGBOARD:
+
+        IBUS
+    DBUS    ABBUS
+        CTLA
+
+
+SEQBOARD,LEDBOARD:
+
+        ABBUS
+    IBUS    CBUS
+        DBUS
+
+
+
+                            pin1: 10.7,0.2
+                pin40: 8.8,0.3
+
+
+pin1: 0.2,8.8                       pin40: 19.2,8.8
+    pin40: 0.3,10.7                     pin1: 19.3,10.7
+
+
+                            pin40: 10.7,19.2
+                pin1: 8.8,19.3
+
+

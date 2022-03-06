@@ -1,0 +1,352 @@
+
+# position parts on rasboard
+#  ./master.sh -gen rasboard -net rasboard.net -report rasboard.rep -pcb rasboard.pcb -pcbmap rasboard.map
+
+manual Conn/abbus [191,87] FLIP
+manual Conn/irbus [87,1] CW
+manual Conn/dbus  [1,87] NORM
+manual Conn/ctla  [87,191] CCW
+manual Conn/power [1,140] NORM
+manual Cap/power  [3,141.5] U
+
+#  +----------------+
+#  |  P   |   IR    |
+#  |  S   |  BMUX   |
+#  |  W   |  MREAD  |
+#  +----------------+
+#  |   RASPI        |
+#  +----------------+
+
+col {
+    tab {
+        row {
+
+            # PROCESSOR STATUS REGISTER #
+
+            col width 3.9 {
+
+                tab {
+                    row {
+                        col {
+                           3.9 x  1.5  at  10.50, 2.60  0.DFF/cff/pswreg/psw/rbc
+                           3.9 x  1.5  at  10.50,12.80  0.DFF/vff/pswreg/psw/rbc
+                           3.9 x  1.5  at   6.60,11.90  0.DFF/zff/pswreg/psw/rbc
+                           3.9 x  1.5  at  10.50, 9.50  0.DFF/nff/pswreg/psw/rbc
+                        }
+                    }
+                    row {
+
+                        col width 1.3 {
+                           1.3 x  0.6  at  13.10, 4.40  0.clk0/pswreg/psw/rbc[0:0]1
+                           1.3 x  0.6  at  13.10, 5.00  0._clk1/pswreg/psw/rbc[0:0]1   FLIP
+                           1.3 x  5.1  at   5.30, 7.70  0.aluz/psw/rbc[0:0]2
+                           1.3 x  0.6  at   6.60, 7.70  0.aluv/psw/rbc[0:0]1
+                           1.3 x  0.6  at   6.60, 8.30  ~0.aluv/psw/rbc[0:0]1
+                        }
+
+                        col width 1.3 {
+                           1.3 x  1.8  at   9.20, 2.60  0._cd/pswreg/psw/rbc[0:0]5
+                           1.3 x  1.8  at  10.50,14.30  0._vd/pswreg/psw/rbc[0:0]5
+
+                           1.3 x  1.8  at   6.60,13.40  0._zd/pswreg/psw/rbc[0:0]5
+    
+                           1.3 x  1.8  at  10.50,11.00  0._nd/pswreg/psw/rbc[0:0]5
+                        }
+
+                        col width 1.3 {
+                           1.3 x  0.9  at   7.90, 2.60  0.aluc/psw/rbc[0:0]10
+                           1.3 x  0.9  at   7.90, 3.50  0.aluc/psw/rbc[0:0]2
+                           1.3 x  0.9  at   4.00, 3.20  0.aluc/psw/rbc[0:0]4
+                           1.3 x  0.9  at   2.70, 2.60  0.aluc/psw/rbc[0:0]6
+                           1.3 x  0.9  at   1.40, 2.60  0.aluc/psw/rbc[0:0]8
+
+                           1.3 x  1.2  at   7.10, 6.20  0._ied/pswreg/psw/rbc[0:0]5
+                           1.3 x  0.6  at   5.80, 6.20  0._ied/pswreg/psw/rbc[0:0]2
+
+                           1.3 x  0.9  at  14.40, 4.40  0.cchold/pswreg/psw/rbc[0:0]2
+                        }
+                    }
+                }
+            
+               3.9 x  1.5  at   8.40, 6.20  0.DFF/ieff/pswreg/psw/rbc
+            }
+
+            # BRANCH CONDITION TESTING #
+
+            col width 1.3 {
+               1.3 x  0.6  at  17.00, 2.00  0.re_a/pswreg/psw/rbc[0:0]1
+               1.3 x  0.6  at   5.80, 6.80  0.X/btxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at   4.50, 6.20  0.u/btxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at   4.50, 6.80  0.w/btxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at  10.50, 7.70  0.X/nvxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at  10.50, 8.30  0.u/nvxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at  10.50, 8.90  0.w/nvxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at   6.60,11.30  0.v/nvxor/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at   5.30,15.20  0.v/btxor/pswreg/psw/rbc[0:0]2
+
+               1.3 x  0.6  at  15.70, 1.40  0.X/rcixor/psw/rbc[0:0]2
+               1.3 x  0.6  at  15.70, 2.00  0.u/rcixor/psw/rbc[0:0]2
+               1.3 x  0.6  at  14.40, 1.40  0.w/rcixor/psw/rbc[0:0]2
+               1.3 x  0.6  at  14.40, 2.00  0.bnot/psw/rbc[0:0]1
+               1.3 x  0.9  at  13.10, 1.40  ~0.bnot/psw/rbc[0:0]1
+            }
+
+            # GATING PSW ONTO A-BUS #
+
+            col width 1.3 {
+               1.3 x  5.1  at  11.40, 7.90  0._btbase/pswreg/psw/rbc[0:0]9  FLIP
+               1.3 x  0.6  at  15.30,11.50  0._btbase/pswreg/psw/rbc[0:0]4  FLIP
+
+               1.3 x  0.6  at  17.00, 1.00  0.Q30/pswreg/psw/rbc[0:0]2
+               1.3 x  0.6  at   4.00, 7.30  0.Q30/pswreg/psw/rbc[1:1]2
+               1.3 x  0.6  at   4.00, 7.90  0.Q30/pswreg/psw/rbc[2:2]2
+               1.3 x  0.6  at   4.00, 8.50  0.Q30/pswreg/psw/rbc[3:3]2
+               1.3 x  0.6  at   4.00,12.10  0.Q15/pswreg/psw/rbc[0:0]2
+            }
+
+            col width 1.3 {
+               1.3 x  0.6  at   4.00, 1.40  0.B/rcixor/psw/rbc[0:0]2
+               1.3 x  0.9  at   2.70, 1.40  ~0.B/rcixor/psw/rbc[0:0]2
+               1.3 x  0.6  at  15.70, 3.80  0.B/rcixor/psw/rbc[0:0]1
+               1.3 x  0.9  at  14.40, 2.60  ~0.B/rcixor/psw/rbc[0:0]1
+               1.3 x  0.6  at   1.40, 3.50  0.X/ccoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at  17.00, 4.40  0.u/ccoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at  17.00, 5.00  0.w/ccoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at  15.70, 4.40  0.v/ccoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at  11.80, 4.40  0.v/rcixor/psw/rbc[0:0]2
+               1.3 x  0.6  at  11.80, 5.00  0.rawshrin/psw/rbc[0:0]3
+               1.3 x  1.2  at  10.50, 4.40  ~0.rawshrin/psw/rbc[0:0]3
+               1.3 x  0.6  at   6.60, 8.90  0.X/cvoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at   6.60, 9.50  0.u/cvoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at   6.60,10.10  0.w/cvoxor/psw/rbc[0:0]2
+               1.3 x  0.6  at   6.60,10.70  0.v/cvoxor/psw/rbc[0:0]2
+            }
+
+            # IR    #
+            # BMUX  #
+            # MREAD #
+
+            col {
+                tab {
+
+                    # INSTRUCTION REGISTER #
+                    row {
+                        col width 2.6 {
+                           2.0 x  0.6  at  14.40, 8.30  3.DLat/ir1512/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at   9.20,20.90  2.DLat/ir1512/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at  15.70,16.10  1.DLat/ir1512/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at   6.60,20.90  0.DLat/ir1512/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at  14.40, 7.70  0._ir12/pswreg/psw/rbc[0:0]1   FLIP
+                           1.3 x  0.6  at   5.30,14.60  0.ir12/pswreg/psw/rbc[0:0]1    FLIP
+                           1.3 x  0.6  at  14.40, 9.50  0.g_a/ir/rbc[0:0]1      FLIP
+                        }
+                        col width 2.6 {
+                           2.0 x  0.6  at   6.60,16.10  3.DLat/ir1108/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at  14.40,10.10  0._ir11/pswreg/psw/rbc[0:0]1   FLIP
+                           1.3 x  0.6  at   5.30,12.80  0.ir11/pswreg/psw/rbc[0:0]1    FLIP
+                            vpad 0.2
+                           2.0 x  0.6  at  13.10,17.90  2.DLat/ir1108/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   5.30,13.40  0._ir10/pswreg/psw/rbc[0:0]1   FLIP
+                           1.3 x  0.6  at  14.40,12.50  0.ir10/pswreg/psw/rbc[0:0]1    FLIP
+                            vpad 0.2
+                           2.0 x  0.6  at  14.40,13.10  1.DLat/ir1108/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at  14.40,10.70  0.DLat/ir1108/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at  14.40,11.90  0.g_b/ir/rbc[0:0]1      FLIP
+                        }
+                        col width 2.6 {
+                           2.0 x  0.6  at   1.40,17.90  3.DLat/ir0704/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at  10.50,19.70  2.DLat/ir0704/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at   9.20,16.10  1.DLat/ir0704/ir/rbc
+                            vpad 0.2
+                           2.0 x  0.6  at  14.40,20.90  0.DLat/ir0704/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   9.20,17.30  0.g_c/ir/rbc[0:0]1      FLIP
+                            vpad 0.1
+                           2.0 x  0.6  at   5.30, 1.40  3.DLat/ir0300/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   5.30, 2.60  0._irbus3/psw/rbc[0:0]1     FLIP
+                           1.3 x  0.6  at   2.70, 3.50  0.irbus3/psw/rbc[0:0]1      FLIP
+                            vpad 0.2
+                        }
+                        col width 2.6 {
+                           2.0 x  0.6  at  15.70, 2.00  2.DLat/ir0300/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   4.00, 2.60  0._irbus2/psw/rbc[0:0]1     FLIP
+                           1.3 x  0.6  at  11.80, 1.40  0.irbus2/psw/rbc[0:0]1      FLIP
+                            vpad 0.2
+                           2.0 x  0.6  at   9.20, 1.40  1.DLat/ir0300/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   1.40, 1.40  0.irbus1/psw/rbc[0:0]1      FLIP
+                            vpad 0.2
+                           2.0 x  0.6  at   5.30, 3.20  0.DLat/ir0300/ir/rbc
+                            vpad 0.1
+                           1.3 x  0.6  at   7.90, 2.00  0.irbus0/psw/rbc[0:0]1      FLIP
+                           1.3 x  0.6  at   7.90, 1.40  0.g_d/ir/rbc[0:0]1      FLIP
+                        }
+                    }
+
+                    # BMUX #
+                    row {
+                        col width 1.3 {
+                           1.3 x  1.8  at   2.70, 9.50  0.BBUS/bmux/rbc[0:0]3
+                           1.3 x  0.6  at   2.70,11.30  0.con0or2/bmux/rbc[0:0]2
+                           1.3 x  1.2  at   2.70,11.90  ~0.con0or2/bmux/rbc[0:0]2
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   2.70,13.10  0._con_4/bmux/rbc[0:0]1
+                           1.3 x  1.2  at  14.40,16.70  0.BBUS/bmux/rbc[8:8]3
+                           1.3 x  0.6  at  13.10,16.10  0.con0or2orirlsof_08_06/bmux/rbc[0:0]3
+                           1.3 x  0.6  at   2.70,16.10  0.BBUS/bmux/rbc[1:1]1
+                           1.3 x  0.6  at   2.70,16.70  0.irof/bmux/rbc[0:0]1
+                        }
+                        col width 1.3 {
+                           1.3 x  1.8  at  11.80,16.10  ~0.con0or2orirlsof_08_06/bmux/rbc[0:0]3
+                           1.3 x  1.8  at   4.00,16.10  0.BBUS/bmux/rbc[1:1]5
+                        }
+                        col width 1.3 {
+                           1.3 x  0.9  at   1.40,16.10  ~0.irof/bmux/rbc[0:0]1
+                           1.3 x  0.6  at  17.00,18.50  0.BBUS/bmux/rbc[9:9]1
+                           1.3 x  0.6  at   7.90,20.30  0.BBUS/bmux/rbc[13:13]1
+                           1.3 x  1.2  at  13.10,19.70  0.BBUS/bmux/rbc[5:5]3
+                           1.3 x  0.6  at  15.70,20.30  0.BBUS/bmux/rbc[12:12]1
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at  17.00,19.10  0._bbus_15_09/bmux/rbc[0:0]3
+                           1.3 x  1.8  at  15.70,17.90  ~0._bbus_15_09/bmux/rbc[0:0]3
+                           1.3 x  1.2  at  11.80,18.50  0.BBUS/bmux/rbc[2:2]3
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   9.20,17.90  0.BBUS/bmux/rbc[10:10]1
+                           1.3 x  1.2  at   7.90,17.90  0.BBUS/bmux/rbc[3:3]3
+                           1.3 x  0.6  at   5.30,17.90  0.BBUS/bmux/rbc[11:11]1
+                           1.3 x  1.2  at   4.00,17.90  0.BBUS/bmux/rbc[4:4]3
+                        }
+                        col width 1.3 {
+                           1.3 x  1.2  at   5.30,19.70  0.BBUS/bmux/rbc[6:6]3
+                           1.3 x  0.6  at   2.70,20.30  0.BBUS/bmux/rbc[14:14]1
+                           1.3 x  1.2  at  17.00,20.90  0.BBUS/bmux/rbc[7:7]3
+                           1.3 x  0.6  at  11.80,21.50  0.BBUS/bmux/rbc[15:15]1
+                        }
+                    }
+
+                    # MEMREAD #
+                    row {
+                        col width 1.3 {
+                           1.3 x  0.6  at   4.00,15.50  0.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at   2.70, 7.70  0.Q/mrd/rbc[7:0]1
+                           1.3 x  0.6  at   2.70, 8.30  0._re/mrd/rbc[0:0]1
+                           1.3 x  0.6  at   2.70, 8.90  0.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at   2.70,13.70  0.Q/mrd/rbc[15:8]5
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   2.70,14.60  0.Q/mrd/rbc[15:8]1
+                           1.3 x  0.9  at   2.70,15.20  0._signextend/mrd/rbc[0:0]3
+                           1.3 x  0.6  at  15.70,17.30  0._signextend/mrd/rbc[0:0]1
+                           1.3 x  0.6  at  14.40,16.10  0.Q/mrd/rbc[15:8]3
+                           1.3 x  0.6  at   6.60,17.30  1.Q/mrd/rbc[7:0]4
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   5.30,16.10  1.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at   1.40,17.00  1.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at  17.00,17.90  1.Q/mrd/rbc[15:8]3
+                           1.3 x  0.6  at  13.10,19.10  2.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at  11.80,17.90  2.Q/mrd/rbc[7:0]2
+                        }
+                        col width 1.3 {
+                           1.3 x  0.9  at  10.50,17.90  2.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at  10.50,18.80  2.Q/mrd/rbc[15:8]3
+                           1.3 x  0.6  at   9.20,18.50  3.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at   9.20,19.10  3.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at   6.60,17.90  3.Q/mrd/rbc[15:8]5
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   6.60,18.80  3.Q/mrd/rbc[15:8]3
+                           1.3 x  0.6  at   5.30,18.50  4.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at   5.30,19.10  4.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at  17.00,19.70  4.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at  15.70,19.70  4.Q/mrd/rbc[15:8]3
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at  14.40,19.70  5.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at  14.40,20.30  5.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at   9.20,19.70  5.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at   7.90,19.70  5.Q/mrd/rbc[15:8]3
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   6.60,19.70  6.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at   6.60,20.30  6.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at   4.00,19.70  6.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at   2.70,19.70  6.Q/mrd/rbc[15:8]3
+                        }
+                        col width 1.3 {
+                           1.3 x  0.6  at   1.40,19.70  7.Q/mrd/rbc[7:0]4
+                           1.3 x  0.6  at   1.40,20.30  7.Q/mrd/rbc[7:0]2
+                           1.3 x  0.9  at  13.10,20.90  7.Q/mrd/rbc[15:8]5
+                           1.3 x  0.6  at  11.80,20.90  7.Q/mrd/rbc[15:8]3
+                        }
+                    }
+                }
+            }
+        }
+
+        # RASPBERRY PI #
+
+        row {
+            col width 2.0 {
+            }
+            col width 2.0 {
+               2.0 x  0.6  at   5.10, 4.60  0.m.RasPi/raspi/rbc
+               2.0 x  0.6  at   3.10, 4.00  1.m.RasPi/raspi/rbc
+               2.0 x  0.6  at   3.10, 4.60  2.m.RasPi/raspi/rbc
+            }
+            col width 2.0 {
+               2.0 x  0.6  at  14.30, 5.20  4.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  12.30, 5.20  5.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  10.30, 5.20  6.m.RasPi/raspi/rbc
+            }
+            col width 2.0 {
+               2.0 x  0.6  at   6.30, 5.20  8.m.RasPi/raspi/rbc
+               2.0 x  0.6  at   4.30, 5.20  9.m.RasPi/raspi/rbc
+               2.0 x  0.6  at   2.30, 5.20  10.m.RasPi/raspi/rbc
+            }
+            col width 2.0 {
+               2.0 x  0.6  at  16.30, 6.40  12.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  14.30, 5.80  13.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  14.30, 6.40  14.m.RasPi/raspi/rbc
+            }
+            col width 2.0 {
+               2.0 x  0.6  at  16.30, 5.20  3.m.RasPi/raspi/rbc
+               2.0 x  0.6  at   8.30, 5.20  7.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  16.30, 5.80  11.m.RasPi/raspi/rbc
+               2.0 x  0.6  at  12.30, 5.80  15.m.RasPi/raspi/rbc
+            }
+            col width 0.7 {
+               0.7 x  0.6  at   5.10, 4.60  dena0.RasPi/raspi/rbc   FLIP
+               0.7 x  0.6  at   4.40, 4.00  qena0.RasPi/raspi/rbc   FLIP
+               0.7 x  0.6  at   5.10, 4.60  dena1.RasPi/raspi/rbc   FLIP
+               0.7 x  0.6  at   4.40, 4.00  qena1.RasPi/raspi/rbc   FLIP
+            }
+            col width 1.0 {
+               0.7 x  0.6  at   7.10, 4.00  intrq.RasPi/raspi/rbc   FLIP
+               0.7 x  0.6  at   7.80, 4.60  reset.RasPi/raspi/rbc   FLIP
+               0.7 x  0.6  at   7.80, 4.00  clock.RasPi/raspi/rbc   FLIP
+               1.0 x  0.6  at   8.50, 4.60  halt.RasPi/raspi/rbc
+            }
+            col width 1.0 {
+               1.0 x  0.6  at   8.50, 4.00  mword.RasPi/raspi/rbc
+               1.0 x  0.6  at   9.50, 4.00  mread.RasPi/raspi/rbc
+               1.0 x  0.6  at   9.50, 4.60  mwrite.RasPi/raspi/rbc
+            }
+        }
+    }
+}

@@ -1,0 +1,87 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+module bmux
+
+source lib.sim
+
+force CON0 0
+force CON2 0
+force CON_4 0
+force IRBROF 0
+force IRLSOF 0
+
+# verify CON0
+force CON0 1
+run 100ns
+Verify BBUS 0000000000000000
+force CON0 0
+
+# verify CON2
+force CON2 1
+run 100ns
+Verify BBUS 0000000000000010
+force CON2 0
+
+# verify CON_4
+force CON_4 1
+run 100ns
+Verify BBUS 1111111111111100
+
+# verify CON_4 | CON_2
+force CON2 1
+run 100ns
+Verify BBUS 1111111111111110
+force CON2 0
+force CON_4 0
+
+# verify IRBROF
+force IRBROF 1
+for {set brof 0} {$brof <= 511} {incr brof} {
+    set brofbin [FormatBin $brof 1 9]
+    set brofnot [string map {1 0 0 1} $brofbin]
+    force _IR 0bxxxxxx${brofnot}x
+    run 100ns
+    if {$brof < 256} {
+        set ss 000000${brofbin}0
+    } else {
+        set ss 111111${brofbin}0
+    }
+    Verify BBUS $ss
+}
+force IRBROF 0
+
+# verify IRLSOF
+force IRLSOF 1
+for {set lsof 0} {$lsof <= 127} {incr lsof} {
+    set lsofbin [FormatBin $lsof 1 7]
+    set lsofnot [string map {1 0 0 1} $lsofbin]
+    force _IR 0bxxxxxxxxx$lsofnot
+    run 100ns
+    if {$lsof < 64} {
+        set ss 000000000$lsofbin
+    } else {
+        set ss 111111111$lsofbin
+    }
+    Verify BBUS $ss
+}
+force IRLSOF 0
+
+# all done
+echo "SUCCESS"

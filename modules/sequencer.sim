@@ -1,0 +1,204 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+
+module sequencer
+
+
+# cycle timeline
+set inmemhold  30       ;# incoming memory remains 30ns after leading clock edge
+set halfcycle 150       ;# clock is negated 150ns after leading clock edge
+set inmemrecv 170       ;# memory is received 170ns after leading clock edge
+set irloadrcv 200       ;# takes this long to receive and latch instr word from memory
+set pswbtcomp 200       ;# takes 200ns for valid PSW_BT after leading clock edge
+set fullcycle 300       ;# whole clock cycle is 300ns
+
+set seqsuf ""           ;# sequencer pin names don't have any suffix
+set memrdbus "**"       ;# the sequencer doesn't read memory
+set memwtbus "**"       ;# the sequencer can't send anything out
+
+source lib.sim
+
+# step through the fetch states
+# called while in middle of previous instruction's last state
+# returns in middle of new instruction's first state with clock just dropped
+#  input:
+#   opc = 16-bit opcode we are supposed to fetch from memory
+proc FetchOpcode {opc} {
+    StepState           ;# finish off last instruction and start sending instruction address to memory
+    VfyState fetch1     ;# now in middle of fetch1 (address is heading toward memory)
+    FinishFetch $opc
+}
+
+# SCRIPT STARTS HERE
+
+ResetProcessor
+
+# BCC short false
+FetchOpcode 0000000000000011                ;# send program counter to memory and receive this opcode back
+force PSW_BT 0b0                            ;# this gets clocked in on next run command
+run [expr $pswbtcomp - $halfcycle]          ;# step to near the end of cycle to let the PSW_BT=0 soak in
+VfyState bcc1f                              ;# hopefully that was enough time to settle in
+
+# BCC short true
+FetchOpcode 0000000000000011
+force PSW_BT 0b1                            ;# this gets clocked in on next run command
+run [expr $pswbtcomp - $halfcycle]          ;# step to near the end of cycle to let the PSW_BT=1 soak in
+VfyState bcc1t                              ;# hopefully that was enough time to settle in
+
+# make sure any one of the BCC cond bits work
+#  any one of the 4 bits make it a BCC and not
+#  one of the misc instructions
+# use the short form for testing here, ie, nz offset
+force PSW_BT 0b1
+FetchOpcode 0000010000000010
+VfyState bcc1t
+FetchOpcode 0000100000000010
+VfyState bcc1t
+FetchOpcode 0001000000000010
+VfyState bcc1t
+
+# make sure any of the branch offset bits keep it short
+#  they must all be zero to get long form (tested above)
+FetchOpcode 0000000000000101
+VfyState bcc1t
+FetchOpcode 0000000000001001
+VfyState bcc1t
+FetchOpcode 0000000000010001
+VfyState bcc1t
+FetchOpcode 0000000000100001
+VfyState bcc1t
+FetchOpcode 0000000001000001
+VfyState bcc1t
+FetchOpcode 0000000010000001
+VfyState bcc1t
+FetchOpcode 0000000100000001
+VfyState bcc1t
+FetchOpcode 0000001000000001
+VfyState bcc1t
+force PSW_BT 0bx
+
+# arith
+for {set rd 0} {$rd < 7} {incr rd} {
+    FetchOpcode 001000[FormatBin $rd 1 3]0000000
+    VfyState arith1
+}
+FetchOpcode 0010001110000000
+VfyState arith1pc
+
+# store word
+FetchOpcode 0100000000000000
+VfyState store1w
+StepState
+VfyState store2
+
+# store byte
+FetchOpcode 0110000000000000
+VfyState store1b
+StepState
+VfyState store2
+
+# load address
+FetchOpcode 1000000000000000
+VfyState lda1
+
+# load unsigned byte not 0(PC)
+FetchOpcode 1010000000000000
+VfyState load1b
+StepState
+VfyState load2b
+
+# load word R0,0(RA) where RA != PC
+for {set ra 0} {$ra < 7} {incr ra} {
+    FetchOpcode 110[FormatBin $ra 1 3]0000000000
+    VfyState load1w
+    StepState
+    VfyState load2w
+}
+
+# load word with RD,0(PC) where RD != PC
+for {set rd 0} {$rd < 7} {incr rd} {
+    FetchOpcode 110111[FormatBin $rd 1 3]0000000
+    VfyState load1w
+    StepState
+    VfyState load2w
+    StepState
+    VfyState load3
+}
+
+# load word with PC,0(PC)
+FetchOpcode 1101111110000000
+VfyState load1w
+StepState
+VfyState load2w
+
+# load signed byte not 0(PC)
+FetchOpcode 1110000000000000
+VfyState load1b
+StepState
+VfyState load2b
+
+# halt
+FetchOpcode 0000000000000000
+VfyState halt1
+
+# iret
+FetchOpcode 0000000000000010
+VfyState iret1
+StepState
+VfyState iret2
+StepState
+VfyState iret3
+StepState
+VfyState iret4
+
+# wrps
+FetchOpcode 0000000000000100
+VfyState wrps1
+
+# rdps
+FetchOpcode 0000000000000110
+VfyState rdps1
+
+# post an interrupt request
+# - we are in middle of last instruction's last cycle
+#   IRQ has been low all along
+#   we are setting IRQ,IE in middle of last instruction's last cycle
+# - note that in real life, IRQ remains asserted until the condition is cleared
+#   out of the IO controller, ie, IRQ is level triggered in this system
+force IRQ 1
+force PSW_IE 1
+StepState
+VfyState ireq1
+StepState
+VfyState ireq2
+StepState
+VfyState ireq3
+StepState
+force PSW_IE 0
+VfyState ireq4
+StepState
+VfyState ireq5
+
+# make sure we're back at fetch1
+StepState
+VfyState fetch1
+
+# all done
+echo "SUCCESS"

@@ -1,0 +1,39 @@
+
+wires, input & output pins:
+    as given in source
+        when instantiated has '/instancename' appended
+
+gates:
+    sourcefilename:lineno.colno
+        when instantiated has '/instancename' appended
+
+    standard cells:
+        rbit "." gatename
+        "~" rbit "." gatename
+
+
+DFFs:
+    normal module instantiation naming starting with DFF
+
+    standard cells:
+        {a..f}.rbit + "." + dffname
+
+DLats:
+    normal module instantiation naming starting with DLat
+
+    standard cells:
+        {a..d}.rbit + "." + dffname
+
+RasPis:
+    normal module instantiation naming starting with RasPi
+
+    creates networks named '{variousthings}. + name' for things the raspi outputs
+
+    creates a connector of its base name
+
+
+Standard Cells:
+    Q. R. D.    prefix to cell name for transistor, collector resistor, base diode
+    Ri. Di.     prefix to cell name for each OR leg
+    Di_j.       prefix to cell name for each AND input
+

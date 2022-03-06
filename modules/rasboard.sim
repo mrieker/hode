@@ -1,0 +1,378 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+# ./master.sh -sim rasboard.sim
+# takes about 2.5m to run
+
+set halfcycle 500
+set cycletime 1000
+
+module rasbdcirc
+
+source lib.sim
+
+run [expr $cycletime * 6 / 10]
+
+force dbus 0xXXXX
+force mreb 0bx
+
+force halt 0
+force mread 0
+force mword 0
+force mwrite 0
+force _ir_we 1
+
+force con0 0
+force con2 0
+force con_4 0
+force irbrof 0
+force irlsof 0
+
+force _psw_reb 1
+
+echo "VERIFY INSTREG"
+set ma 0x1234
+for {set dbit 0} {$dbit < 16} {incr dbit} {
+    for {set dval 0} {$dval < 2} {incr dval} {
+        set bits [FormatBin [expr 1 << $dbit] 1 16]
+        if {$dval} {set bits [string map {0 1 1 0} $bits]}
+
+        # store test bits in a memory location
+        force mwrite 1
+        force mword 1
+        force dbus $ma
+        run $cycletime
+        force mwrite 0
+        force dbus 0b$bits
+        run $cycletime
+
+        # fetch from that location into IR
+        force mread 1
+        force dbus $ma
+        run $cycletime  ;# run from clkup+600ns to next clkup+600ns
+        force mread 0
+        force _ir_we 0  ;# open IR latch
+        run $halfcycle  ;# run to clkup+100ns
+        force _ir_we 1  ;# close IR latch
+        run $halfcycle  ;# run to clkup+600ns
+        Verify irbus $bits
+        Verify _irbus [string map {0 1 1 0} $bits]
+        run $cycletime  ;# run another full cycle to be sure IR holds data
+        Verify irbus $bits
+        Verify _irbus [string map {0 1 1 0} $bits]
+
+        incr ma 2
+    }
+}
+
+echo "VERIFY MREAD"
+force halt 0
+force mread 0
+force mwrite 0
+force mreb 0
+force _ir_we 1
+for {set dbit 0} {$dbit < 16} {incr dbit} {
+    for {set dval 0} {$dval < 2} {incr dval} {
+        set bits [FormatBin [expr 1 << $dbit] 1 16]
+        if {$dval} {set bits [string map {0 1 1 0} $bits]}
+
+        # store test bits in a memory location
+        force mwrite 1
+        force mword 1
+        force dbus $ma
+        run $cycletime
+        force mwrite 0
+        force dbus 0b$bits
+        run $cycletime
+
+        # read from memory as a word
+        force mword 1
+        force mread 1
+        force mreb 1
+        force dbus $ma
+        run $cycletime
+        Verify bbus $bits
+        force mread 0
+        force mreb 0
+        run $cycletime
+        Verify bbus 1111111111111111
+
+        # byte-sized zero extended
+        force mword 0
+        force -anywire  irbus 0bx0xxxxxxxxxxxxxx
+        force -anywire _irbus 0bx1xxxxxxxxxxxxxx
+        force mread 1
+        force mreb 1
+        force dbus $ma
+        run $cycletime
+        Verify bbus 00000000[string range $bits 8 15]
+        force mread 0
+        force mreb 0
+        run $cycletime
+        Verify bbus 1111111111111111
+
+        # byte-sized sign extended
+        force -anywire  irbus 0bx1xxxxxxxxxxxxxx
+        force -anywire _irbus 0bx0xxxxxxxxxxxxxx
+        force mread 1
+        force mreb 1
+        force dbus $ma
+        run $cycletime
+        set s [string range $bits 8 8]
+        Verify bbus $s$s$s$s$s$s$s$s[string range $bits 8 15]
+        force mread 0
+        force mreb 0
+        run $cycletime
+        Verify bbus 1111111111111111
+
+        incr ma 2
+    }
+}
+
+echo "VERIFY BMUX"
+force con_4 1
+run 100
+Verify bbus 1111111111111100
+force con_4 0
+force con2 1
+run 100
+Verify bbus 0000000000000010
+force con_4 1
+run 100
+Verify bbus 1111111111111110
+force con_4 0
+force con2 0
+force con0 1
+run 100
+Verify bbus 0000000000000000
+force con0 0
+for {set irbus 0} {$irbus < 0x400} {incr irbus} {
+    force -anywire _irbus 0bxxxxxx[FormatBin [expr 0x3FF - $irbus] 1 10]
+
+    set brof [expr (($irbus & 0x3FE) ^ 0x200) - 0x200]
+    force irbrof 1
+    force irlsof 0
+    run 100
+    Verify bbus [FormatBin $brof 1 16]
+
+    set lsof [expr (($irbus & 0x07F) ^ 0x040) - 0x040]
+    force irbrof 0
+    force irlsof 1
+    run 100
+    Verify bbus [FormatBin $lsof 1 16]
+}
+force irbrof 0
+force irlsof 0
+
+# verify PSW circuit
+force -anywire irbus 0xXXXX
+force -anywire _irbus 0xXXXX
+force dbus 0xXXXX
+force _psw_ieclr 1
+force psw_aluwe 0
+force psw_we 0
+force _psw_reb 1
+force rawcout 0bX
+force rawvout 0bX
+force rawshrout 0bX
+force asign 0bX
+force -anywire clk2 0
+force irfc 0
+
+echo "VERIFY PSW WE & BRANCH TESTING"
+for {set n 0} {$n < 2} {incr n} {
+    for {set z 0} {$z < 2} {incr z} {
+        for {set v 0} {$v < 2} {incr v} {
+            for {set c 0} {$c < 2} {incr c} {
+                for {set ie 0} {$ie < 2} {incr ie} {
+
+                    # write condition codes and interrupt enable
+                    force psw_we 1
+                    force dbus 0b${ie}xxxxxxxxxxx$n$z$v$c
+                    run $cycletime
+                    force -anywire clk2 1
+                    run $cycletime
+                    force -anywire clk2 0
+                    force psw_we 0
+
+                    # verify that we can read them back
+                    Verify bbus 1111111111111111
+                    force _psw_reb 0
+                    run $cycletime
+                    set pscc $n$z$v$c
+                    Verify bbus ${ie}11111111111${pscc}
+                    force _psw_reb 1
+
+                    # verify 'branch true' condition
+                    set cz  [expr $c  | $z]
+                    set nv  [expr $n  ^ $v]
+                    set nvz [expr $nv | $z]
+                    for {set ircc 0} {$ircc < 8} {incr ircc} {
+                        for {set ir0 0} {$ir0 < 2} {incr ir0} {
+                            set posir xxx[FormatBin $ircc 1 3]xxxxxxxxx$ir0
+                            force -anywire irbus 0b$posir
+                            force -anywire _irbus 0b[string map {0 1 1 0} $posir]
+                            run $cycletime
+                            switch $ircc {
+                                0 {set btsb 0}
+                                1 {set btsb $z}
+                                2 {set btsb $nv}
+                                3 {set btsb $nvz}
+                                4 {set btsb $c}
+                                5 {set btsb $cz}
+                                6 {set btsb $n}
+                                7 {set btsb $v}
+                                default {echo "bad ircc $ircc" ; pause}
+                            }
+                            Verify psw_bt [expr $btsb ^ $ir0]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+force psw_we 1
+force dbus 0xXXXX
+force -anywire clk2 0
+force psw_we 0
+force _psw_reb 1
+force -anywire irbus 0xXXXX
+force -anywire _irbus 0xXXXX
+
+echo "VERIFY PSW ALUWE"
+set cycletime 200
+
+force -anywire  irbus  0xXXXX
+force -anywire _irbus  0xXXXX
+force  dbus   0xXXXX
+force _psw_ieclr 1
+force  psw_aluwe 0
+force  psw_we    0
+force _psw_reb   0
+force  rawcout   0bX
+force  rawvout   0bX
+force  rawshrout 0bX
+force  asign     0bX
+force -anywire  clk2      0bX
+force  irfc      1
+
+for {set aop 0} {$aop < 16} {incr aop} {
+    if {$aop ==  3} continue
+    if {$aop == 11} continue
+    echo " aop=$aop"
+    set posir [FormatBin $aop 1 4]
+    force -anywire  irbus 0bxxxxxxxxxxxx$posir
+    force -anywire _irbus 0bxxxxxxxxxxxx[string map {0 1 1 0} $posir]
+
+    for {set dbit -1} {$dbit < 16} {incr dbit} {
+        for {set rawcout 0} {$rawcout < 2} {incr rawcout} {
+            for {set rawvout 0} {$rawvout < 2} {incr rawvout} {
+                for {set rawshrout 0} {$rawshrout < 2} {incr rawshrout} {
+                    for {set asign 0} {$asign < 2} {incr asign} {
+                        for {set lastpswc 0} {$lastpswc < 2} {incr lastpswc} {
+
+                            # clock $lastpswc into PSW<C> register
+                            force dbus 0bxxxxxxxxxxxxxxx$lastpswc
+                            force psw_we 1
+                            run $cycletime
+                            force -anywire clk2 1
+                            run $cycletime
+                            force -anywire clk2 0
+                            force psw_we 0
+                            Verify pswc/psw $lastpswc
+
+                            # set dbus (ALU output) value with bit 'dbit' set
+                            # ...for negative and zero detection
+                            if {$dbit == 15} {
+                                force dbus 0b1xxxxxxxxxxxxxxx
+                                set alun 1
+                                set aluz 0
+                            } elseif {$dbit == -1} {
+                                force dbus 0
+                                set alun 0
+                                set aluz 1
+                            } else {
+                                force dbus 0b0[string range xxxxxxxxxxxxxx $dbit 13][string range 1xxxxxxxxxxxxxxx 0 $dbit]
+                                set alun 0
+                                set aluz 0
+                            }
+
+                            # compute what the bits should be
+                            set rawshrin   [expr ($asign & $aop) | ($lastpswc & ($aop >> 1))]
+                            set bnot       [expr (($aop & 5) == 5)]
+                            set rawcin     [expr $bnot ^ ((($aop & 6) == 6) & ($lastpswc | (($aop & 8) == 0)))]
+                            set cookedcout [expr $bnot ^ $rawcout]
+                            set cookedvout [expr $rawvout ^ $rawcout]
+
+                            set aluv [expr (($aop &  4) ==  4) & $cookedvout]
+
+                            set aluc [expr (($aop & 12) ==  0) & $rawshrout | \
+                                           (($aop & 12) ==  4) & $lastpswc  | \
+                                           (($aop & 12) ==  8) & $lastpswc  | \
+                                           (($aop & 12) == 12) & $cookedcout]
+
+                            # set raw C and raw V bits coming out of ALU
+                            # also set up shr bit coming out of bottom of ALU
+                            force asign     $asign
+                            force rawcout   $rawcout
+                            force rawvout   $rawvout
+                            force rawshrout $rawshrout
+                            force psw_aluwe 1
+
+                            # let the values soak into psw circuits
+                            run $cycletime
+
+                            # verify the combinational outputs before clocking
+                            Verify rawcin   $rawcin
+                            Verify rawshrin $rawshrin
+
+                            # clock values into psw's flipflops
+                            force -anywire clk2 1
+                            run $cycletime
+                            force -anywire clk2 0
+                            force psw_aluwe 0
+
+                            # get what nzvc bits got clocked into the psw register
+                            set nzvcis [string range [examine bbus] 12 15]
+
+                            set nzvcsb $alun$aluz$aluv$aluc
+                            if {$nzvcis != $nzvcsb} {
+                                echo "nzvc is $nzvcis sb $nzvcsb (aop=$aop b=$b rawvout=$rawvout rawcout=$rawcout lastpswc=$lastpswc rawshrout=$rawshrout asign=$asign)"
+                                pause
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+force -anywire  irbus 0bxxxxxxxxxxxxxxxx
+force -anywire _irbus 0bxxxxxxxxxxxxxxxx
+force dbus   0bxxxxxxxxxxxxxxxx
+force psw_we    0bx
+force asign     0bx
+force rawcout   0bx
+force rawvout   0bx
+force rawshrout 0bx
+force psw_aluwe 0bx
+force _psw_reb  0bx
+
+echo "SUCCESS"

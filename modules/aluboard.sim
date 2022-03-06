@@ -1,0 +1,173 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+# ./master.sh -sim aluboard.sim
+# takes about 1m30s to run
+
+module alueight
+
+set cycletime 500
+
+source lib.sim
+
+force A 0xXX
+force SHR 0bX
+force CIN 0bX
+force IR 0xXXXX
+force _IR 0xXXXX
+force ADD 0
+force BONLY 0
+force IRFC 0
+
+# verify internal bonly function
+echo "VERIFY BONLY"
+force BONLY 1
+force CIN 0
+for {set b 0} {$b < 256} {incr b} {
+    force B $b
+    run $cycletime
+    Verify S [FormatBin $b 1 8]
+}
+force BONLY 0
+
+# verify internal add function
+echo "VERIFY ADD"
+force ADD 1
+force CIN 0
+for {set a 0} {$a < 256} {incr a 3} {
+    for {set b 0} {$b < 256} {incr b 7} {
+        force A $a
+        force B $b
+        run $cycletime
+        Verify S [FormatBin [expr $a + $b] 1 8]
+    }
+}
+force ADD 0
+
+# verify shift-right functions
+echo "VERIFY IRFC xSR"
+force IRFC 1
+force B 0xXXXX
+ForceIRPair xxxxxxxxxxxx00xx        ;# xSR
+for {set a 0} {$a < 256} {incr a} {
+    force A $a
+    for {set c 0} {$c < 2} {incr c} {
+        force SHR $c
+        run $cycletime
+        Verify S $c[FormatBin [expr $a >> 1] 1 7]
+    }
+}
+force IRFC 0
+force A 0xXXXX
+force SHR 0bX
+
+# verify other single-operand instructions
+echo "VERIFY MOV,NEG,INC,COM"
+force IRFC 1
+for {set b 0} {$b < 256} {incr b} {
+    force B $b
+
+    ForceIRPair xxxxxxxxxxxx0100    ;# MOV
+    force CIN 0
+    run $cycletime
+    Verify S [FormatBin $b 1 8]
+    Verify VOUT 0
+
+    ForceIRPair xxxxxxxxxxxx0101    ;# NEG
+    force CIN 1
+    run $cycletime
+    Verify S [FormatBin [expr 256 - $b] 1 8]
+    Verify VOUT [expr (($b & 127) ==   0) ? 1 : 0]
+
+    ForceIRPair xxxxxxxxxxxx0110    ;# INC
+    force CIN 1
+    run $cycletime
+    Verify S [FormatBin [expr $b + 1] 1 8]
+    Verify VOUT [expr (($b & 127) == 127) ? 1 : 0]
+
+    ForceIRPair xxxxxxxxxxxx0111    ;# COM
+    force CIN 0
+    run $cycletime
+    Verify S [FormatBin [expr 255 - $b] 1 8]
+    Verify VOUT 0
+}
+force IRFC 0
+force CIN 0bX
+
+# verify logical operators
+echo "VERIFY OR,AND,XOR"
+force IRFC 1
+for {set a 0} {$a < 256} {incr a 23} {
+    for {set b 0} {$b < 256} {incr b 19} {
+        force A $a
+        force B $b
+        ForceIRPair xxxxxxxxxxxx1000    ;# OR
+        run $cycletime
+        Verify S [FormatBin [expr $a | $b] 1 8]
+        ForceIRPair xxxxxxxxxxxx1001    ;# AND
+        run $cycletime
+        Verify S [FormatBin [expr $a & $b] 1 8]
+        ForceIRPair xxxxxxxxxxxx1010    ;# XOR
+        run $cycletime
+        Verify S [FormatBin [expr $a ^ $b] 1 8]
+    }
+}
+
+# verify arithmetic operators
+echo "VERIFY ADD,SUB,ADC,SBB"
+force IRFC 1
+for {set a 0} {$a < 256} {incr a 23} {
+    for {set b 0} {$b < 256} {incr b 19} {
+        force A $a
+        force B $b
+
+        ForceIRPair xxxxxxxxxxxx1100        ;# ADD
+        force CIN 0
+        run $cycletime
+        Verify S [FormatBin [expr $a + $b] 1 8]
+        Verify COUT [expr ($a + $b) >> 8]
+        Verify VOUT [expr (($a & 127) + ($b & 127)) >> 7]
+
+        ForceIRPair xxxxxxxxxxxx1101        ;# SUB
+        force CIN 1
+        run $cycletime
+        Verify S [FormatBin [expr $a + 256 - $b] 1 8]
+        Verify COUT [expr ($a + 255 - $b + 1) >> 8]
+        Verify VOUT [expr (($a & 127) + 127 - ($b & 127) + 1) >> 7]
+
+        for {set c 0} {$c < 2} {incr c} {
+            force CIN $c
+
+            ForceIRPair xxxxxxxxxxxx1110    ;# ADC
+            run $cycletime
+            Verify S [FormatBin [expr $a + $b + $c] 1 8]
+            Verify COUT [expr ($a + $b + $c) >> 8]
+            Verify VOUT [expr (($a & 127) + ($b & 127) + $c) >> 7]
+
+            ForceIRPair xxxxxxxxxxxx1111    ;# SBB
+            run $cycletime
+            Verify S [FormatBin [expr $a + 255 - $b + $c] 1 8]
+            Verify COUT [expr ($a + 255 - $b + $c) >> 8]
+            Verify VOUT [expr (($a & 127) + 127 - ($b & 127) + $c) >> 7]
+        }
+    }
+}
+
+# all done
+echo "SUCCESS"

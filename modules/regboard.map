@@ -1,0 +1,638 @@
+
+manual Conn/abbus [191,87] FLIP
+manual Conn/irbus [87,1] CW
+manual Conn/irsel [87,5] CW
+manual Conn/dbus  [1,87] NORM
+manual Conn/ctla  [87,191] CCW
+manual Conn/ctsa  [87,186] CCW
+manual Conn/power [1,140] NORM
+manual Cap/power  [3,141.5] U
+
+# COL       1           2           3           4           5
+#       dffevn[15]  dffevn[07]              dffodd[15]  dffodd[07]
+#       dffevn[14]  dffevn[06]              dffodd[14]  dffodd[06]
+#       dffevn[13]  dffevn[05]              dffodd[13]  dffodd[05]
+#       dffevn[12]  dffevn[04]              dffodd[12]  dffodd[04]
+#       dffwevn     misc                    dffwodd
+#       dffevn[11]  dffevn[03]              dffodd[11]  dffodd[03]
+#       dffevn[10]  dffevn[02]              dffodd[10]  dffodd[02]
+#       dffevn[09]  dffevn[01]              dffodd[09]  dffodd[01]
+#       dffenv[08]  dffevn[00]              dffodd[08]  dffodd[00]
+
+# COL 1
+
+col width 3.9 {
+
+   1.3 x  0.6  at  14.90, 6.20   0.ir12/regpair[0:0]1
+
+    # COL 1 ROW A
+   3.9 x  0.7  at   0.60, 4.10   0.DFF/bit15/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90, 4.80   0.abus/revn/regpair[15:15]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   3.20, 4.80   0.bbus/revn/regpair[15:15]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   8.40, 3.10   0.clk0_a/revn/regpair[0:0]2      # bit06,bit07,bit14,bit15
+            }
+        }
+    }
+
+    # COL 1 ROW B
+   3.9 x  0.7  at   0.60, 5.40   0.DFF/bit14/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90, 6.10   0.abus/revn/regpair[14:14]2
+            }
+            col {
+               1.3 x  0.6  at   3.20, 6.10   0.bbus/revn/regpair[14:14]2
+            }
+            col {
+               1.3 x  0.6  at   8.40, 3.70   0.rea_a/revn/regpair[0:0]1     # abus[04,05,06,07,12,13,14,15]
+            }
+        }
+    }
+
+    # COL 1 ROW C
+   3.9 x  0.7  at   0.60, 6.70   0.DFF/bit13/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90, 7.40   0.abus/revn/regpair[13:13]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   3.20, 7.40   0.bbus/revn/regpair[13:13]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   8.40, 6.70   0.clk0_b/revn/regpair[0:0]2      # bit04,bit05,bit12,bit13
+            }
+        }
+    }
+
+    # COL 1 ROW D
+   3.9 x  0.7  at   0.60, 8.00   0.DFF/bit12/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90, 8.70   0.abus/revn/regpair[12:12]2
+            }
+            col {
+               1.3 x  0.6  at   3.20, 8.70   0.bbus/revn/regpair[12:12]2
+            }
+            col {
+               1.3 x  0.6  at   8.40, 9.40   0.reb_a/revn/regpair[0:0]1     # bbus[04,05,06,07,12,13,14,15]
+            }
+        }
+    }
+
+    # COL 1 ROW E
+   3.9 x  1.5  at   0.60,13.90   0.DFF/wevn/regpair
+
+    # COL 1 ROW F
+   3.9 x  0.7  at   0.60, 9.30   0.DFF/bit11/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90,10.00   0.abus/revn/regpair[11:11]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   3.20,10.00   0.bbus/revn/regpair[11:11]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   8.40, 8.80   0.clk0_c/revn/regpair[0:0]2      # bit02,bit03,bit10,bit11
+            }
+        }
+    }
+
+    # COL 1 ROW G
+   3.9 x  0.7  at   0.60,10.60   0.DFF/bit10/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90,11.30   0.abus/revn/regpair[10:10]2
+            }
+            col {
+               1.3 x  0.6  at   3.20,11.30   0.bbus/revn/regpair[10:10]2
+            }
+            col {
+               1.3 x  0.6  at   8.40, 7.30   0.rea_b/revn/regpair[0:0]1     # abus[00,01,02,03,08,09,10,11]
+            }
+        }
+    }
+
+    # COL 1 ROW H
+   3.9 x  0.7  at   0.60,11.90   0.DFF/bit09/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   1.90,12.60   0.abus/revn/regpair[9:9]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   3.20,12.60   0.bbus/revn/regpair[9:9]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   8.40,10.90   0.clk0_d/revn/regpair[0:0]2      # bit00,bit01,bit08,bit09
+            }
+        }
+    }
+
+    # COL 1 ROW I
+   3.9 x  0.7  at   0.60,13.20   0.DFF/bit08/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col cellheight 1.8 {
+               1.3 x  0.6  at   8.40,12.10   0.abus/revn/regpair[8:8]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.6  at   8.40,12.70   0.bbus/revn/regpair[8:8]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.6  at   8.40,11.50   0.reb_b/revn/regpair[0:0]1     # bbus[00,01,02,03,08,09,10,11]
+            }
+        }
+    }
+}
+
+# COL 2
+
+col width 3.9 {
+
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  11.00, 6.10   0.ir11/regpair[0:0]1
+            }
+            col {
+               1.3 x  0.6  at   4.50, 6.10   0.ir9/regpair[0:0]1
+            }
+            col {
+               1.3 x  0.6  at   0.60, 6.10   0.ir8/regpair[0:0]1
+            }
+        }
+    }
+
+    # COL 2 ROW A
+   3.9 x  0.7  at   4.50, 4.10   0.DFF/bit07/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80, 4.80   0.abus/revn/regpair[7:7]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   7.10, 4.80   0.bbus/revn/regpair[7:7]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 2 ROW B
+   3.9 x  0.7  at   4.50, 5.40   0.DFF/bit06/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80, 6.10   0.abus/revn/regpair[6:6]2
+            }
+            col {
+               1.3 x  0.6  at   7.10, 6.10   0.bbus/revn/regpair[6:6]2
+            }
+        }
+    }
+
+    # COL 2 ROW C
+   3.9 x  0.7  at   4.50, 6.70   0.DFF/bit05/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80, 7.40   0.abus/revn/regpair[5:5]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   7.10, 7.40   0.bbus/revn/regpair[5:5]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 2 ROW D
+   3.9 x  0.7  at   4.50, 8.00   0.DFF/bit04/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80, 8.70   0.abus/revn/regpair[4:4]2
+            }
+            col {
+               1.3 x  0.6  at   7.10, 8.70   0.bbus/revn/regpair[4:4]2
+            }
+        }
+    }
+
+    # COL 2 ROW E
+    tab {
+        row {
+            col width 3.9 cellheight 1.5 {
+               1.3 x  0.6  at   8.40,14.50   0._clk_1/regpair[0:0]1
+            }
+        }
+    }
+
+    # COL 2 ROW F
+   3.9 x  0.7  at   4.50, 9.30   0.DFF/bit03/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80,10.00   0.abus/revn/regpair[3:3]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   7.10,10.00   0.bbus/revn/regpair[3:3]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 2 ROW G
+   3.9 x  0.7  at   4.50,10.60   0.DFF/bit02/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80,11.30   0.abus/revn/regpair[2:2]2
+            }
+            col {
+               1.3 x  0.6  at   7.10,11.30   0.bbus/revn/regpair[2:2]2
+            }
+        }
+    }
+
+    # COL 2 ROW H
+   3.9 x  0.7  at   4.50,11.90   0.DFF/bit01/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at   5.80,12.60   0.abus/revn/regpair[1:1]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at   7.10,12.60   0.bbus/revn/regpair[1:1]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 2 ROW I
+   3.9 x  0.7  at   4.50,13.20   0.DFF/bit00/revn/regpair
+    vpad 0.1
+    tab {
+        row {
+            col cellheight 1.8 {
+               1.3 x  0.6  at   8.40,13.30   0.abus/revn/regpair[0:0]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.6  at   8.40,13.90   0.bbus/revn/regpair[0:0]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.9  at   8.40,10.00   0._wdevn/regpair[0:0]2
+            }
+        }
+    }
+}
+
+# COL 3
+
+col width 1.3 {
+
+   1.3 x  1.8  at   9.70, 9.10   0._rea/rodd/regpair[0:0]3
+   1.3 x  2.4  at   9.70, 5.50   0._reb/rodd/regpair[0:0]4
+   1.3 x  0.9  at   8.40, 7.90   0._rea/revn/regpair[0:0]3
+   1.3 x  2.4  at   8.40, 4.30   0._reb/revn/regpair[0:0]4
+   1.3 x  0.6  at   9.70, 4.90   0.rea_a/rodd/regpair[0:0]1
+   1.3 x  0.6  at   9.70, 8.50   0.rea_b/rodd/regpair[0:0]1
+   1.3 x  0.6  at   9.70,11.50   0.reb_a/rodd/regpair[0:0]1
+   1.3 x  0.6  at   9.70,14.50   0.reb_b/rodd/regpair[0:0]1
+
+   1.3 x  0.6  at   8.40,15.10   0.clk0/regpair[0:0]1
+   1.3 x  0.6  at   8.40,15.70   0._clk1/regpair[0:0]1
+
+   1.3 x  1.8  at   9.70,12.10   0._wdodd/regpair[0:0]3
+}
+
+# COL 4
+
+col width 3.9 {
+
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  14.90, 4.90   0.ir7_a/regpair[0:0]1      FLIP
+            }
+            col {
+               1.3 x  0.6  at  11.00, 4.80   0._ir7_a/regpair[0:0]1     FLIP
+            }
+            col {
+               1.3 x  0.6  at   4.50, 4.80   0.ir6/regpair[0:0]1        FLIP
+            }
+        }
+    }
+
+    # COL 4 ROW A
+   3.9 x  0.7  at  11.00, 4.10   0.DFF/bit15/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30, 4.80   0.abus/rodd/regpair[15:15]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  13.60, 4.80   0.bbus/rodd/regpair[15:15]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   9.70, 4.30   0.clk0_a/rodd/regpair[0:0]2
+            }
+        }
+    }
+
+    # COL 4 ROW B
+   3.9 x  0.7  at  11.00, 5.40   0.DFF/bit14/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30, 6.10   0.abus/rodd/regpair[14:14]2
+            }
+            col {
+               1.3 x  0.6  at  13.60, 6.10   0.bbus/rodd/regpair[14:14]2
+            }
+        }
+    }
+
+    # COL 4 ROW C
+   3.9 x  0.7  at  11.00, 6.70   0.DFF/bit13/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30, 7.40   0.abus/rodd/regpair[13:13]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  13.60, 7.40   0.bbus/rodd/regpair[13:13]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   9.70, 7.90   0.clk0_b/rodd/regpair[0:0]2
+            }
+        }
+    }
+
+    # COL 4 ROW D
+   3.9 x  0.7  at  11.00, 8.00   0.DFF/bit12/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30, 8.70   0.abus/rodd/regpair[12:12]2
+            }
+            col {
+               1.3 x  0.6  at  13.60, 8.70   0.bbus/rodd/regpair[12:12]2
+            }
+        }
+    }
+
+    # COL 4 ROW E
+   3.9 x  1.5  at  11.00,13.90   0.DFF/wodd/regpair
+
+    # COL 4 ROW F
+   3.9 x  0.7  at  11.00, 9.30   0.DFF/bit11/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30,10.00   0.abus/rodd/regpair[11:11]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  13.60,10.00   0.bbus/rodd/regpair[11:11]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   9.70,10.90   0.clk0_c/rodd/regpair[0:0]2
+            }
+        }
+    }
+
+    # COL 4 ROW G
+   3.9 x  0.7  at  11.00,10.60   0.DFF/bit10/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30,11.30   0.abus/rodd/regpair[10:10]2
+            }
+            col {
+               1.3 x  0.6  at  13.60,11.30   0.bbus/rodd/regpair[10:10]2
+            }
+        }
+    }
+
+    # COL 4 ROW H
+   3.9 x  0.7  at  11.00,11.90   0.DFF/bit09/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  12.30,12.60   0.abus/rodd/regpair[9:9]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  13.60,12.60   0.bbus/rodd/regpair[9:9]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.9  at   9.70,13.90   0.clk0_d/rodd/regpair[0:0]2
+            }
+        }
+    }
+
+    # COL 4 ROW I
+   3.9 x  0.7  at  11.00,13.20   0.DFF/bit08/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col cellheight 1.8 {
+               1.3 x  0.6  at  16.20,14.00   0.abus/rodd/regpair[8:8]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.6  at  17.50,14.00   0.bbus/rodd/regpair[8:8]2
+            }
+        }
+    }
+}
+
+# COL 5
+
+col width 3.9 {
+
+    tab {
+        row {
+            col width 1.3 {
+               1.3 x  0.6  at   0.60, 4.80   0.ir5/regpair[0:0]1    FLIP
+            }
+            col width 1.3 {
+            }
+            col width 1.3 {
+            }
+        }
+    }
+
+    # COL 5 ROW A
+   3.9 x  0.7  at  14.90, 4.20   0.DFF/bit07/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20, 4.90   0.abus/rodd/regpair[7:7]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  17.50, 4.90   0.bbus/rodd/regpair[7:7]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 5 ROW B
+   3.9 x  0.7  at  14.90, 5.50   0.DFF/bit06/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20, 6.20   0.abus/rodd/regpair[6:6]2
+            }
+            col {
+               1.3 x  0.6  at  17.50, 6.20   0.bbus/rodd/regpair[6:6]2
+            }
+        }
+    }
+
+    # COL 5 ROW C
+   3.9 x  0.7  at  14.90, 6.80   0.DFF/bit05/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20, 7.50   0.abus/rodd/regpair[5:5]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  17.50, 7.50   0.bbus/rodd/regpair[5:5]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 5 ROW D
+   3.9 x  0.7  at  14.90, 8.10   0.DFF/bit04/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20, 8.80   0.abus/rodd/regpair[4:4]2
+            }
+            col {
+               1.3 x  0.6  at  17.50, 8.80   0.bbus/rodd/regpair[4:4]2
+            }
+        }
+    }
+
+    # COL 5 ROW E
+    vpad 1.5
+
+    # COL 5 ROW F
+   3.9 x  0.7  at  14.90, 9.40   0.DFF/bit03/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20,10.10   0.abus/rodd/regpair[3:3]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  17.50,10.10   0.bbus/rodd/regpair[3:3]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 5 ROW G
+   3.9 x  0.7  at  14.90,10.70   0.DFF/bit02/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20,11.40   0.abus/rodd/regpair[2:2]2
+            }
+            col {
+               1.3 x  0.6  at  17.50,11.40   0.bbus/rodd/regpair[2:2]2
+            }
+        }
+    }
+
+    # COL 5 ROW H
+   3.9 x  0.7  at  14.90,12.00   0.DFF/bit01/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col {
+               1.3 x  0.6  at  16.20,12.70   0.abus/rodd/regpair[1:1]2
+                vpad 0.3
+            }
+            col {
+               1.3 x  0.6  at  17.50,12.70   0.bbus/rodd/regpair[1:1]2
+                vpad 0.3
+            }
+        }
+    }
+
+    # COL 5 ROW I
+   3.9 x  0.7  at  14.90,13.30   0.DFF/bit00/rodd/regpair
+    vpad 0.1
+    tab {
+        row {
+            col cellheight 1.8 {
+               1.3 x  0.6  at  16.20,14.60   0.abus/rodd/regpair[0:0]2
+            }
+            col cellheight 1.8 {
+               1.3 x  0.6  at  17.50,14.60   0.bbus/rodd/regpair[0:0]2
+            }
+        }
+    }
+}

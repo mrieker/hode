@@ -1,0 +1,1235 @@
+
+# ledboard overlays the seqboard
+# it has same orientation as seqboard
+
+# the seqboard leaves these margins:
+
+################################
+#            ACON              #
+#        2.0" margin           #
+#                              #
+#  I                        C  #
+#  C  2.5"            5.0"  C  #
+#  O margin          margin O  #
+#  N                        N  #
+#                              #
+#        2.5" margin           #
+#            DCON              #
+################################
+
+# this layout uses 2.5" on both sides
+#  and 2.0" on top and bottom
+
+manual Conn/abbus [87,1] CW
+manual Conn/irbus [1,87] NORM
+manual Conn/dbus  [87,191] CCW
+manual Conn/ctla  [191,87] FLIP
+manual Conn/power [140,192] CCW
+manual Cap/power  [141.5,190] L
+
+# icon leds
+col {
+    tab {
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.0.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.0.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.0.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.0.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.1.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.1.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.1.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.1.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.2.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.2.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.2.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.2.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.3.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.3.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.3.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.3.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.4.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.4.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.4.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.4.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.5.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.5.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.5.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.5.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.6.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.6.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.6.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.6.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.7.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.7.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.7.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.7.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.8.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.8.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.8.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.8.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.9.Q/I    FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.9.Q/I     OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.9.Q/I    OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.9.Q/I    OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.10.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.10.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.10.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.10.Q/I   OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.11.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.11.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.11.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.11.Q/I   OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.12.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.12.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.12.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.12.Q/I   OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.13.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.13.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.13.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.13.Q/I   OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.14.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.14.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.14.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.14.Q/I   OFFSET 0.0,0.1
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.3  at   7.50, 1.90  rb.15.Q/I   FLIP    OFFSET 0.0,0.1
+            }
+            col {
+               0.4 x  0.3  at  14.80, 3.10  q.15.Q/I    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.30, 1.30  rc.15.Q/I   OFFSET -0.05,0.05
+            }
+            col {
+               0.3 x  0.2  at   4.20, 2.40  sl.15.Q/I   OFFSET 0.0,0.1
+            }
+        }
+    }
+}
+
+col {
+    tab {
+
+        # acon leds
+        row {
+            col width 1.2 {
+               0.3 x  0.3  at   4.40, 3.30  rb.15.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.15.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.15.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.15.Q/A   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.14.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.14.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.14.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.14.Q/A   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.13.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.13.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.13.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.13.Q/A   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.12.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.12.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.12.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.12.Q/A   OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.30  rb.11.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.11.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.11.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.11.Q/A   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.10.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.10.Q/A    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.10.Q/A   FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.10.Q/A   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.9.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.9.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.9.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.9.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.8.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.8.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.8.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.8.Q/A    OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.30  rb.7.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.7.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.7.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.7.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.6.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.6.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.6.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.6.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.5.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.5.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.5.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.5.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.4.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.4.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.4.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.4.Q/A    OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.30  rb.3.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.3.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.3.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.3.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.2.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.2.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.2.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.2.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.1.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.1.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.1.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.1.Q/A    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.30  rb.0.Q/A
+               0.4 x  0.3  at  15.20, 2.20  q.0.Q/A     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.60, 1.00  rc.0.Q/A    FLIP
+               0.3 x  0.2  at   5.40, 1.30  sl.0.Q/A    OFFSET 0.05,0.0
+            }
+            col width 0.7 {
+               0.3 x  0.3  at   4.40, 3.00  rb.15.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.15.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.15.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.15.Q/B   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.14.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.14.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.14.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.14.Q/B   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.13.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.13.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.13.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.13.Q/B   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.12.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.12.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.12.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.12.Q/B   OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.00  rb.11.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.11.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.11.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.11.Q/B   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.10.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.10.Q/B    OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.10.Q/B   FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.10.Q/B   OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.9.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.9.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.9.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.9.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.8.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.8.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.8.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.8.Q/B    OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.00  rb.7.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.7.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.7.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.7.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.6.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.6.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.6.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.6.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.5.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.5.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.5.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.5.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.4.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.4.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.4.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.4.Q/B    OFFSET 0.05,0.0
+            }
+            col width 0.5 {
+               0.3 x  0.3  at   4.40, 3.00  rb.3.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.3.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.3.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.3.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.2.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.2.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.2.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.2.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.1.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.1.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.1.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.1.Q/B    OFFSET 0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.40, 3.00  rb.0.Q/B
+               0.4 x  0.3  at  15.20, 1.90  q.0.Q/B     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  15.30, 1.00  rc.0.Q/B    FLIP
+               0.3 x  0.2  at   5.80, 3.30  sl.0.Q/B    OFFSET 0.05,0.0
+            }
+        }
+
+        # central cutout
+        row {
+            col width 15.0 {
+                vpad 16.0
+            }
+        }
+
+        # dcon leds
+        row {
+            col width 1.1 {
+               0.3 x  0.2  at   6.20, 3.30  sl.15.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.15.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.15.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.15.Q/D
+            }
+            col {
+               0.3 x  0.2  at  10.70, 2.10  sl.14.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.14.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.14.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.14.Q/D
+            }
+            col {
+               0.3 x  0.2  at  13.00, 1.50  sl.13.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.13.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.13.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.13.Q/D
+            }
+            col {
+               0.3 x  0.2  at  17.90, 1.30  sl.12.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.12.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.12.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.12.Q/D
+            }
+            col width 0.5 {
+               0.3 x  0.2  at   4.60, 1.30  sl.11.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.11.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.11.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.11.Q/D
+            }
+            col {
+               0.3 x  0.2  at   7.40, 3.20  sl.10.Q/D   OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.10.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.10.Q/D    OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.10.Q/D
+            }
+            col {
+               0.3 x  0.2  at   4.20, 3.10  sl.9.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.9.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.9.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.9.Q/D
+            }
+            col {
+               0.3 x  0.2  at   8.30, 1.60  sl.8.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.8.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.8.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.8.Q/D
+            }
+            col width 0.5 {
+               0.3 x  0.2  at  12.70, 2.90  sl.7.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.7.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.7.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.7.Q/D
+            }
+            col {
+               0.3 x  0.2  at  15.80, 3.20  sl.6.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.6.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.6.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.6.Q/D
+            }
+            col {
+               0.3 x  0.2  at  11.40, 1.00  sl.5.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.5.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.5.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.5.Q/D
+            }
+            col {
+               0.3 x  0.2  at   5.80, 2.30  sl.4.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.4.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.4.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.4.Q/D
+            }
+            col width 0.5 {
+               0.3 x  0.2  at  10.70, 2.30  sl.3.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.3.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.3.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.3.Q/D
+            }
+            col {
+               0.3 x  0.2  at  14.30, 3.00  sl.2.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.2.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.2.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.2.Q/D
+            }
+            col {
+               0.3 x  0.2  at  17.00, 2.70  sl.1.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.1.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.1.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.1.Q/D
+            }
+            col {
+               0.3 x  0.2  at   4.60, 2.80  sl.0.Q/D    OFFSET 0.05,-0.05
+               0.3 x  0.3  at  15.90, 1.00  rc.0.Q/D
+               0.4 x  0.3  at  15.20, 2.50  q.0.Q/D     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.40, 2.30  rb.0.Q/D
+            }
+            col width 0.9 {
+               0.3 x  0.2  at   8.70, 1.60  sl.0.Q/RAWCOUT      OFFSET 0.05,-0.05
+               0.3 x  0.3  at  11.40, 1.30  rc.0.Q/RAWCOUT
+               0.4 x  0.3  at  13.40, 2.00  q.0.Q/RAWCOUT       OFFSET 0.15,-0.1
+               0.3 x  0.3  at   6.00, 2.20  rb.0.Q/RAWCOUT
+            }
+            col width 0.5 {
+               0.3 x  0.2  at  16.60, 2.80  sl.0.Q/RAWVOUT      OFFSET 0.05,-0.05
+               0.3 x  0.3  at   5.20, 2.20  rc.0.Q/RAWVOUT
+               0.4 x  0.3  at   8.80, 2.20  q.0.Q/RAWVOUT       OFFSET 0.15,-0.1
+               0.3 x  0.3  at   4.20, 3.60  rb.0.Q/RAWVOUT
+            }
+            col width 0.5 {
+               0.3 x  0.2  at   8.70, 3.20  sl.0.Q/RAWCMID      OFFSET 0.05,-0.05
+               0.3 x  0.3  at   5.60, 1.30  rc.0.Q/RAWCMID
+               0.4 x  0.3  at   7.50, 1.60  q.0.Q/RAWCMID       OFFSET 0.15,-0.1
+               0.3 x  0.3  at  11.10, 3.60  rb.0.Q/RAWCMID
+            }
+            col width 0.5 {
+               0.3 x  0.2  at  13.00, 1.90  sl.0.Q/RAWCIN       OFFSET 0.05,-0.05
+               0.3 x  0.3  at   3.30, 2.90  rc.0.Q/RAWCIN
+               0.4 x  0.3  at   5.30, 1.00  q.0.Q/RAWCIN        OFFSET 0.15,-0.1
+               0.3 x  0.3  at   8.40, 1.90  rb.0.Q/RAWCIN
+            }
+            col width 0.7 {
+               0.3 x  0.2  at   4.60, 3.20  sl.0.Q/RAWSHRIN     OFFSET 0.05,-0.05
+               0.3 x  0.3  at   8.80, 3.60  rc.0.Q/RAWSHRIN
+               0.4 x  0.3  at  13.30, 1.00  q.0.Q/RAWSHRIN      OFFSET 0.15,-0.1
+               0.3 x  0.3  at   7.70, 1.00  rb.0.Q/RAWSHRIN
+            }
+            col width 0.5 {
+               0.3 x  0.2  at   3.90, 1.60  sl.0.Q/RAWSHRMID    OFFSET 0.05,-0.05
+               0.3 x  0.3  at   8.80, 1.30  rc.0.Q/RAWSHRMID
+               0.4 x  0.3  at  17.90, 2.80  q.0.Q/RAWSHRMID     OFFSET 0.15,-0.1
+               0.3 x  0.3  at   3.60, 3.60  rb.0.Q/RAWSHRMID
+            }
+            col width 0.5 {
+               0.3 x  0.2  at  13.00, 1.70  sl.0.Q/RAWSHROUT    OFFSET 0.05,-0.05
+               0.3 x  0.3  at   3.60, 2.20  rc.0.Q/RAWSHROUT
+               0.4 x  0.3  at  11.40, 1.60  q.0.Q/RAWSHROUT     OFFSET 0.15,-0.1
+               0.3 x  0.3  at  17.40, 1.00  rb.0.Q/RAWSHROUT
+            }
+        }
+    }
+}
+
+# ccon leds
+col {
+    tab {
+        row {
+            col {
+               0.3 x  0.2  at   6.00, 2.50  sl.0.Q/PSW_WE       FLIP
+            }
+            col {
+               0.3 x  0.3  at   8.40, 1.00  rc.0.Q/PSW_WE       FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   4.40, 1.30  q.0.Q/PSW_WE        FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   6.30, 1.60  rb.0.Q/PSW_WE       OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   5.20, 3.20  sl.0.Q/_PSW_REB
+            }
+            col {
+               0.3 x  0.3  at   4.80, 2.60  rc.0.Q/_PSW_REB     OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   9.50, 2.80  q.0.Q/_PSW_REB      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   7.50, 1.30  rb.0.Q/_PSW_REB     FLIP    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  11.00, 1.60  sl.0.Q/_PSW_IECLR
+            }
+            col {
+               0.3 x  0.3  at  10.00, 3.60  rc.0.Q/_PSW_IECLR   OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   4.00, 1.00  q.0.Q/_PSW_IECLR    FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  11.80, 1.30  rb.0.Q/_PSW_IECLR   FLIP    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  10.30, 2.20  sl.0.Q/PSW_ALUWE    FLIP
+            }
+            col {
+               0.3 x  0.3  at   7.10, 1.30  rc.0.Q/PSW_ALUWE    FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  15.90, 3.60  q.0.Q/PSW_ALUWE     FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.70, 1.00  rb.0.Q/PSW_ALUWE    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   3.30, 1.80  sl.0.Q/MEM_WRITE    FLIP
+            }
+            col {
+               0.3 x  0.3  at   1.70, 1.60  rc.0.Q/MEM_WRITE    FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   8.00, 1.00  q.0.Q/MEM_WRITE     FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   3.30, 2.00  rb.0.Q/MEM_WRITE    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   3.30, 1.60  sl.0.Q/MEM_WORD     FLIP
+            }
+            col {
+               0.3 x  0.3  at  16.90, 3.60  rc.0.Q/MEM_WORD     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  14.90, 1.00  q.0.Q/MEM_WORD      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  12.20, 1.30  rb.0.Q/MEM_WORD     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  12.50, 1.60  sl.0.Q/MEM_REB      FLIP
+            }
+            col {
+               0.3 x  0.3  at   5.00, 1.00  rc.0.Q/MEM_REB      FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  11.80, 3.20  q.0.Q/MEM_REB       FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   9.60, 1.00  rb.0.Q/MEM_REB      OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  12.20, 3.40  sl.0.Q/MEM_READ     FLIP
+            }
+            col {
+               0.3 x  0.3  at  14.80, 1.60  rc.0.Q/MEM_READ     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   7.10, 2.50  q.0.Q/MEM_READ      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   9.20, 2.70  rb.0.Q/MEM_READ     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   4.40, 1.80  sl.0.Q/_IR_WE
+            }
+            col {
+               0.3 x  0.3  at  16.90, 1.60  rc.0.Q/_IR_WE       OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   5.60, 3.10  q.0.Q/_IR_WE        FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  12.20, 3.10  rb.0.Q/_IR_WE       FLIP    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  13.00, 1.00  sl.0.Q/HALT         FLIP
+            }
+            col {
+               0.3 x  0.3  at  12.50, 2.40  rc.0.Q/HALT         FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   6.70, 2.80  q.0.Q/HALT          FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   8.40, 2.20  rb.0.Q/HALT         OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  17.90, 2.10  sl.0.Q/GPRS_WED     FLIP
+            }
+            col {
+               0.3 x  0.3  at  15.20, 1.30  rc.0.Q/GPRS_WED     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  13.40, 3.20  q.0.Q/GPRS_WED      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  14.00, 1.00  rb.0.Q/GPRS_WED     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  17.60, 2.10  sl.0.Q/GPRS_WE7     FLIP
+            }
+            col {
+               0.3 x  0.3  at  15.60, 2.20  rc.0.Q/GPRS_WE7     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  12.50, 2.10  q.0.Q/GPRS_WE7      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  14.60, 1.00  rb.0.Q/GPRS_WE7     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   9.20, 1.60  sl.0.Q/GPRS_RED2B   FLIP
+            }
+            col {
+               0.3 x  0.3  at  10.30, 2.60  rc.0.Q/GPRS_RED2B   FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  11.00, 2.70  q.0.Q/GPRS_RED2B    FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.00, 1.30  rb.0.Q/GPRS_RED2B   OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  13.40, 1.30  sl.0.Q/GPRS_REB     FLIP
+            }
+            col {
+               0.3 x  0.3  at   7.50, 2.70  rc.0.Q/GPRS_REB     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   6.30, 2.50  q.0.Q/GPRS_REB      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.80, 1.90  rb.0.Q/GPRS_REB     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   7.10, 3.00  sl.0.Q/GPRS_REA7    FLIP
+            }
+            col {
+               0.3 x  0.3  at  16.00, 1.50  rc.0.Q/GPRS_REA7    FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   9.90, 2.80  q.0.Q/GPRS_REA7     FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.20, 1.00  rb.0.Q/GPRS_REA7    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  13.80, 3.10  sl.0.Q/GPRS_REA     FLIP
+            }
+            col {
+               0.3 x  0.3  at   7.50, 2.40  rc.0.Q/GPRS_REA     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   6.30, 2.20  q.0.Q/GPRS_REA      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.80, 1.30  rb.0.Q/GPRS_REA     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   6.70, 3.40  sl.0.Q/BMUX_IRLSOF  FLIP
+            }
+            col {
+               0.3 x  0.3  at   6.30, 1.30  rc.0.Q/BMUX_IRLSOF  FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   5.20, 2.70  q.0.Q/BMUX_IRLSOF   FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   6.70, 3.10  rb.0.Q/BMUX_IRLSOF  OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  15.20, 3.10  sl.0.Q/BMUX_IRBROF  FLIP
+            }
+            col {
+               0.3 x  0.3  at  15.60, 1.90  rc.0.Q/BMUX_IRBROF  FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  12.50, 1.80  q.0.Q/BMUX_IRBROF   FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  15.60, 2.80  rb.0.Q/BMUX_IRBROF  OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  14.00, 3.60  sl.0.Q/BMUX_CON__4  FLIP
+            }
+            col {
+               0.3 x  0.3  at   9.90, 3.10  rc.0.Q/BMUX_CON__4  FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  10.30, 3.60  q.0.Q/BMUX_CON__4   FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   9.50, 1.30  rb.0.Q/BMUX_CON__4  OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  16.00, 2.50  sl.0.Q/BMUX_CON_2   FLIP
+            }
+            col {
+               0.3 x  0.3  at   3.30, 2.30  rc.0.Q/BMUX_CON_2   FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   8.40, 1.30  q.0.Q/BMUX_CON_2    FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  16.90, 1.30  rb.0.Q/BMUX_CON_2   OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  16.00, 2.70  sl.0.Q/BMUX_CON_0   FLIP
+            }
+            col {
+               0.3 x  0.3  at   3.30, 2.60  rc.0.Q/BMUX_CON_0   FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   8.80, 3.10  q.0.Q/BMUX_CON_0    FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  17.20, 3.00  rb.0.Q/BMUX_CON_0   OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  16.00, 2.30  sl.0.Q/ALU_IRFC     FLIP
+            }
+            col {
+               0.3 x  0.3  at  16.00, 2.00  rc.0.Q/ALU_IRFC     FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   2.00, 2.20  q.0.Q/ALU_IRFC      FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   9.90, 1.00  rb.0.Q/ALU_IRFC     OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  10.60, 2.50  sl.0.Q/ALU_BONLY    FLIP
+            }
+            col {
+               0.3 x  0.3  at  15.60, 2.50  rc.0.Q/ALU_BONLY    FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   5.60, 1.90  q.0.Q/ALU_BONLY     FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  10.60, 3.00  rb.0.Q/ALU_BONLY    OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  17.20, 2.50  sl.0.Q/ALU_ADD      FLIP
+            }
+            col {
+               0.3 x  0.3  at   4.40, 1.00  rc.0.Q/ALU_ADD      FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   2.50, 1.00  q.0.Q/ALU_ADD       FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   6.10, 1.00  rb.0.Q/ALU_ADD      OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  18.00, 1.00  sl.0.Q/PSW_IE       FLIP
+            }
+            col {
+               0.3 x  0.3  at   1.70, 2.50  rc.0.Q/PSW_IE       FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  11.00, 3.30  q.0.Q/PSW_IE        FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  17.20, 2.70  rb.0.Q/PSW_IE       OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   3.30, 3.20  sl.0.Q/PSW_BT       FLIP
+            }
+            col {
+               0.3 x  0.3  at   5.60, 2.50  rc.0.Q/PSW_BT       FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   2.10, 1.00  q.0.Q/PSW_BT        FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  15.60, 3.10  rb.0.Q/PSW_BT       OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.2
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  16.30, 3.60  sl.0.Q/RESET        FLIP
+            }
+            col {
+               0.3 x  0.3  at  11.00, 1.30  rc.0.Q/RESET        FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at  10.70, 3.60  q.0.Q/RESET         FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   4.80, 3.30  rb.0.Q/RESET        OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at  14.80, 1.90  sl.0.Q/IRQ          FLIP
+            }
+            col {
+               0.3 x  0.3  at   7.10, 1.90  rc.0.Q/IRQ          FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   3.60, 1.60  q.0.Q/IRQ           FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at   2.00, 1.30  rb.0.Q/IRQ          OFFSET -0.1,0.0
+            }
+        }
+        row {
+            col {
+                vpad 0.1
+            }
+        }
+        row {
+            col {
+               0.3 x  0.2  at   3.30, 3.40  sl.0.Q/CLK2         FLIP
+            }
+            col {
+               0.3 x  0.3  at  14.10, 3.00  rc.0.Q/CLK2         FLIP    OFFSET -0.05,0.05
+            }
+            col {
+               0.4 x  0.3  at   5.70, 3.60  q.0.Q/CLK2          FLIP    OFFSET -0.05,0.0
+            }
+            col {
+               0.3 x  0.3  at  12.20, 1.60  rb.0.Q/CLK2         OFFSET -0.1,0.0
+            }
+        }
+    }
+}

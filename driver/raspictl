@@ -1,0 +1,4 @@
+#!/bin/bash
+dz=$0
+. `dirname $0`/iow56sns.si
+exec $0.`uname -m` "$@"

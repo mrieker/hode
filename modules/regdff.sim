@@ -1,0 +1,226 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+
+# ./master.sh -sim regdff.sim
+# takes about 3s to run
+
+# timeline:
+#
+#      0:
+#        force CLK2 = 0
+#
+#    100:
+#        force CLK2 = 1
+#        force IR = register number 0
+#
+#    200:
+#        force CLK2 = 0
+#        force DBUS = data to be written to R0
+#
+#        [2--] _wtevn,_wtodd get set up according to IR for R0
+#
+#    300:
+#        force CLK2 = 1
+#        force IR = register number 1
+#
+#        [320] clk0_{a,b,c,d} assert for R0
+#        [350] data gets written to R0
+#
+#    400:
+#        force CLK2 = 0
+#        force DBUS = data to be written to R1
+#
+#        [4--] _wtevn,_wtodd get set up according to IR for R1
+#
+#    500:
+#        force CLK2 = 1
+#        force IR = register number 2
+#
+#        [520] clk0_{a,b,c,d} assert for R1
+#        [550] data gets written to R1
+#
+#    600:
+#        force CLK2 = 0
+#        force DBUS = data to be written to R2
+
+module registers
+
+set halfcycle 100
+
+source lib.sim
+
+########################
+#  Script Starts Here  #
+########################
+
+force CLK2  0
+force WE7   0
+force REA7  0
+force WED   0
+force REA   0
+force REB   0
+force RED2B 0
+
+## monitor clk0_a/revn/r0r1 clk0_a/rodd/r0r1 clk0_a/revn/r2r3 clk0_a/rodd/r2r3 clk0_a/revn/r4r5 clk0_a/rodd/r4r5 clk0_a/revn/r6r7 clk0_a/rodd/r6r7 \
+##  q/revn/r0r1 q/rodd/r0r1 q/revn/r2r3 q/rodd/r2r3 q/revn/r4r5 q/rodd/r4r5 q/revn/r6r7 q/rodd/r6r7
+
+set gprsuf ""
+
+run $halfcycle
+
+# fill registers with known values
+
+force WED 1
+for {set num 0} {$num < 8} {incr num} {
+    set bin [FormatBin $num 1 3]
+    set val [expr ($num + 1) * 0x1111]
+    set dat [FormatBin $val 1]
+
+    # put register number on bus
+    echo "about to assert clock to write register $num = $dat"
+    force CLK2 1
+    ForceIRPair xxxxxx${bin}xxxxxxx
+
+    # wait setup time
+    # - previous register gets written with previous data
+    run $halfcycle
+
+    # put data on bus
+    echo "about to negate clock after writing register $num = $dat"
+    force CLK2 0
+    force DBUS 0b$dat
+
+    # wait setup time
+    # - _wtevn,_wtodd get set up for R$num
+    # - data soaks into R$num DFF inputs
+    run $halfcycle
+}
+
+# clock last register's data in
+force WED 0
+force CLK2 1
+ForceIRPair xxxxxxxxxxxxxxxx
+run $halfcycle
+force CLK2 0
+
+force DBUS 0bxxxxxxxxxxxxxxxx
+
+# verify register contents
+
+Verify q/revn/r0r1 0001000100010001
+Verify q/rodd/r0r1 0010001000100010
+Verify q/revn/r2r3 0011001100110011
+Verify q/rodd/r2r3 0100010001000100
+Verify q/revn/r4r5 0101010101010101
+Verify q/rodd/r4r5 0110011001100110
+Verify q/revn/r6r7 0111011101110111
+Verify q/rodd/r6r7 1000100010001000
+
+# see that they gate out to busses
+# this is all combinational logic
+
+force REA 1
+for {set num 0} {$num < 8} {incr num} {
+    set bin [FormatBin $num 1 3]
+    set val [expr ($num + 1) * 0x1111]
+
+    echo "checking register $num for value $val"
+
+    # put register number on bus
+    ForceIRPair xxx${bin}xxxxxxxxxx
+
+    # give it some decode time
+    run $halfcycle
+
+    # check the output value
+    Verify ABUS [FormatBin $val 1]
+    Verify BBUS 1111111111111111
+}
+force REA 0
+
+force REB 1
+for {set num 0} {$num < 8} {incr num} {
+    set bin [FormatBin $num 1 3]
+    set val [expr ($num + 1) * 0x1111]
+
+    echo "checking register $num for value $val"
+
+    # put register number on bus
+    ForceIRPair xxxxxxxxx${bin}xxxx
+
+    # give it some decode time
+    run $halfcycle
+
+    # check the output value
+    Verify ABUS 1111111111111111
+    Verify BBUS [FormatBin $val 1]
+}
+force REB 0
+
+force RED2B 1
+for {set num 0} {$num < 8} {incr num} {
+    set bin [FormatBin $num 1 3]
+    set val [expr ($num + 1) * 0x1111]
+
+    echo "checking register $num for value $val"
+
+    VerifyGPR $bin [FormatBin $val 1]
+
+    # put register number on bus
+    ForceIRPair xxxxxx${bin}xxxxxxx
+
+    # give it some decode time
+    run $halfcycle
+
+    # check the output value
+    Verify ABUS 1111111111111111
+    Verify BBUS [FormatBin $val 1]
+}
+force RED2B 0
+
+force REA7 1
+run $halfcycle
+Verify ABUS [FormatBin 0x8888 1]
+Verify BBUS 1111111111111111
+force REA7 0
+
+force CLK2 1
+force WE7 1
+run $halfcycle
+force CLK2 0
+force DBUS 0b[FormatBin 0xABCD 1]
+run $halfcycle
+force CLK2 1
+force WE7 0
+run $halfcycle
+Verify q/rodd/r6r7 1010101111001101    ;# ABCD
+force CLK2 0
+run $halfcycle
+
+Verify q/revn/r0r1 0001000100010001    ;# 1111
+Verify q/rodd/r0r1 0010001000100010    ;# 2222
+Verify q/revn/r2r3 0011001100110011    ;# 3333
+Verify q/rodd/r2r3 0100010001000100    ;# 4444
+Verify q/revn/r4r5 0101010101010101    ;# 5555
+Verify q/rodd/r4r5 0110011001100110    ;# 6666
+Verify q/revn/r6r7 0111011101110111    ;# 7777
+Verify q/rodd/r6r7 1010101111001101    ;# ABCD
+
+echo "SUCCESS"

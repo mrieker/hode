@@ -1,0 +1,28 @@
+
+
+
+https://www.mouser.com/ProductDetail/Molex/38700-7302?qs=SWvc%2Fhn7BQxFykf9e2oDGA%3D%3D
+https://www.mouser.com/datasheet/2/276/0387007302_TERMINAL_BLOCKS-138371.pdf
+https://www.molex.com/pdm_docs/sd/387007302_sd.pdf
+
+
+
+dy  = 0.325
+
+ycenter = 0.5
+
+y1 = 0.5 - 0.1625 = 0.3375
+y2 = 0.5 + 0.1625 = 0.6625
+
+
+
+    6625
+    3375
+    ----
+    3250
+
+
+
+0.364 - 0.311 = 0.053" diam hole
+              = 1.346 mm
+

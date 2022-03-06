@@ -1,0 +1,68 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+# ./netgen.sh aluboard.mod -sim aluaddtime.sim
+# takes about 2 mins to run
+
+module alueight
+
+set cycletime 300
+
+source lib.sim
+
+force A 0xXX
+force SHR 0bX
+force CIN 0bX
+force IR 0xXXXX
+force _IR 0xXXXX
+force ADD 1
+force BONLY 0
+force IRFC 0
+
+expr srand(0)
+set timestep 10
+set tworst 0
+for {set loop 0} {$loop < 10000} {incr loop} {
+    set a [expr int(rand() * 256)]
+    set b [expr int(rand() * 256)]
+    set c [expr int(rand() * 2)]
+    force A $a
+    force B $b
+    force CIN $c
+    set expect [expr $a+$b+$c]
+    set expsum [FormatBin $expect 1 8]
+    set expcou [expr $expect >> 8]
+    set tt 0
+    for {set t 0} {$t < $cycletime} {incr t $timestep} {
+        run $timestep
+        set actsum [examine S]
+        set actcou [examine COUT]
+        if {"$actcou$actsum" != "$expcou$expsum"} {
+            set tt [expr $t + $timestep]
+        }
+    }
+    if {$tt >= $cycletime} {
+        echo ERROR adding $a $b $c
+        exit
+    }
+    if {$tworst < $tt} {
+        set tworst $tt
+        echo $a $b $c = $tt
+    }
+}

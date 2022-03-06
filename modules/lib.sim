@@ -1,0 +1,284 @@
+##    Copyright (C) Mike Rieker, Beverly, MA USA
+##    www.outerworldapps.com
+##
+##    This program is free software; you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation; version 2 of the License.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    EXPECT it to FAIL when someone's HeALTh or PROpeRTy is at RISk.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program; if not, write to the Free Software
+##    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##    http:##www.gnu.org/licenses/gpl-2.0.html
+
+# verify that the given pin has the given value
+# print error and stop if not
+proc Verify {pin val} {
+    global now
+    set act [examine $pin]
+    if {$act != $val} {
+        echo "bad $pin is $act sb $val at t=$now"
+        pause
+    }
+}
+proc VerifyV {pin val} {
+    global now
+    set act [examine $pin]
+    ## echo "VerifyV*: $pin $act $val"
+    if {$act != $val} {
+        echo "bad $pin is $act sb $val at t=$now"
+        pause
+    }
+}
+
+# Verify sequencer output pins in middle of state
+# Pass the pins expected to be asserted
+# All the other ones are expected to be negated
+# Does not test mem_word negated, use a separate Verify MEM_WORD$seqsuf 0, as it is often 'don't care'
+proc VfySeqOuts {pins} {
+    global seqsuf
+
+    ## echo "VfySeqOuts*: [lindex $pins 0] ..."
+
+    set pinlist [list ALU_ADD ALU_IRFC ALU_BONLY BMUX_CON__4 BMUX_CON_2 BMUX_CON_0 BMUX_IRBROF BMUX_IRLSOF \
+                    GPRS_WE7 GPRS_REA7 GPRS_WED GPRS_REA GPRS_REB GPRS_RED2B HALT \
+                    MEM_READ MEM_WRITE MEM_REB PSW_ALUWE PSW_WE _PSW_IECLR _PSW_REB _IR_WE \
+                    reset1q fetch1q fetch2q bcc1q arith1q \
+                    store1q store2q lda1q load1q load2q load3q halt1q wrps1q rdps1q \
+                    ireq1q ireq2q ireq3q ireq4q ireq5q iret1q iret2q iret3q iret4q ]
+
+    set ctlpin       0
+    foreach pin $pins {
+        if { $ctlpin || [exists "$pin$seqsuf"] } {
+            set assval [expr {[string range $pin 0 0] != "_"}]
+            Verify "$pin$seqsuf" $assval
+            set idx [lsearch $pinlist $pin]
+            set pinlist [lreplace $pinlist $idx $idx]
+        }
+        set ctlpin 1
+    }
+
+    foreach pinzero $pinlist {
+        if { [exists "$pinzero$seqsuf"] } {
+            set negval [expr {[string range $pinzero 0 0] == "_"}]
+            Verify "$pinzero$seqsuf" $negval
+        }
+    }
+}
+
+# verify that sequencer is now in the given state
+# also verify the corresponding output pins
+# print error and stop if not
+proc VfyState {st} {
+    global seqsuf
+
+    ## echo "VfyState*: verifying state $st"
+
+    switch $st {
+        reset1  { VfySeqOuts    [list   reset1q BMUX_CON_0  ALU_BONLY   GPRS_WE7    PSW_WE      _PSW_IECLR  ] }
+
+        fetch1  { VfySeqOuts    [list   fetch1q GPRS_REA7   BMUX_CON_0  ALU_ADD     MEM_READ    MEM_WORD    ] }
+        fetch2  { VfySeqOuts    [list   fetch2q GPRS_REA7   BMUX_CON_2  ALU_ADD     GPRS_WE7    _IR_WE      ] }
+
+        bcc1f   { VfySeqOuts    [list   bcc1q   GPRS_REA7   BMUX_IRBROF ALU_ADD                             ] }
+        bcc1t   { VfySeqOuts    [list   bcc1q   GPRS_REA7   BMUX_IRBROF ALU_ADD     GPRS_WE7                ] }
+
+        arith1  { VfySeqOuts    [list   arith1q GPRS_REA    GPRS_REB    ALU_IRFC    GPRS_WED    PSW_ALUWE   ] }
+        arith1pc { VfySeqOuts   [list   arith1q GPRS_REA    GPRS_REB    ALU_IRFC    PSW_ALUWE               ] }
+
+        store1b { VfySeqOuts    [list   store1q GPRS_REA    BMUX_IRLSOF ALU_ADD     MEM_WRITE               ] ; Verify MEM_WORD$seqsuf 0 }
+        store1w { VfySeqOuts    [list   store1q GPRS_REA    BMUX_IRLSOF ALU_ADD     MEM_WRITE   MEM_WORD    ] }
+        store2  { VfySeqOuts    [list   store2q GPRS_RED2B  ALU_BONLY                                       ] }
+
+        lda1    { VfySeqOuts    [list   lda1q   GPRS_REA    BMUX_IRLSOF ALU_ADD     GPRS_WED                ] }
+
+        load1b  { VfySeqOuts    [list   load1q  GPRS_REA    BMUX_IRLSOF ALU_ADD     MEM_READ                ] ; Verify MEM_WORD$seqsuf 0 }
+        load1w  { VfySeqOuts    [list   load1q  GPRS_REA    BMUX_IRLSOF ALU_ADD     MEM_READ    MEM_WORD    ] }
+        load2b  { VfySeqOuts    [list   load2q  MEM_REB     ALU_BONLY   GPRS_WED                            ] ; Verify MEM_WORD$seqsuf 0 }
+        load2w  { VfySeqOuts    [list   load2q  MEM_REB     ALU_BONLY   GPRS_WED    MEM_WORD                ] }
+        load3   { VfySeqOuts    [list   load3q  GPRS_REA7   BMUX_CON_2  ALU_ADD     GPRS_WE7                ] }
+
+        ireq1   { VfySeqOuts    [list   ireq1q  BMUX_CON__4 BMUX_CON_2  ALU_BONLY   MEM_WRITE   MEM_WORD    ] }
+        ireq2   { VfySeqOuts    [list   ireq2q  _PSW_REB    ALU_BONLY                                       ] }
+        ireq3   { VfySeqOuts    [list   ireq3q  BMUX_CON__4 ALU_BONLY   MEM_WRITE   MEM_WORD                ] }
+        ireq4   { VfySeqOuts    [list   ireq4q  _PSW_IECLR  GPRS_REA7   BMUX_CON_0  ALU_ADD                 ] }
+        ireq5   { VfySeqOuts    [list   ireq5q  BMUX_CON_2  ALU_BONLY   GPRS_WE7                            ] }
+
+        iret1   { VfySeqOuts    [list   iret1q  BMUX_CON__4 ALU_BONLY   MEM_READ    MEM_WORD                ] }
+        iret2   { VfySeqOuts    [list   iret2q  MEM_REB     MEM_WORD    ALU_BONLY   GPRS_WE7                ] }
+        iret3   { VfySeqOuts    [list   iret3q  BMUX_CON__4 BMUX_CON_2  ALU_BONLY   MEM_READ    MEM_WORD    ] }
+        iret4   { VfySeqOuts    [list   iret4q  MEM_REB     MEM_WORD    ALU_BONLY   PSW_WE                  ] }
+
+        halt1   { VfySeqOuts    [list   halt1q  HALT        GPRS_REB    ALU_BONLY                           ] }
+
+        wrps1   { VfySeqOuts    [list   wrps1q  GPRS_REB    ALU_BONLY   PSW_WE                              ] }
+
+        rdps1   { VfySeqOuts    [list   rdps1q  _PSW_REB    ALU_BONLY   GPRS_WED                            ] }
+
+        default {
+            echo "unknown state $st"
+            pause
+        }
+    }
+}
+
+# verify GPR contents
+#  input:
+#   num = 3-bit register number
+#   val = 16-bit expected value
+proc VerifyGPR {num val} {
+    global gprsuf
+
+    set num [FromBin $num]
+    if { $num & 1 } { set revod rodd } { set revod revn }
+    set rpair r[expr $num & 6]r[expr $num | 1]
+    Verify q/$revod/$rpair$gprsuf $val
+}
+
+# clock high then low to step to the next state
+# called in middle of starting state with clock low
+# returns in middle of next state with clock low
+proc StepState { } {
+    global inmemhold
+    global fullcycle
+    global halfcycle
+    global memrdbus
+    global now
+    run [expr $fullcycle - $now % $fullcycle]
+    ## echo "StepState*: STARTING NEW STATE AT $now"
+    force CLK2 1
+    run $inmemhold
+    if {$memrdbus != "**"} {
+        force $memrdbus 0bxxxxxxxxxxxxxxxx
+    }
+    run [expr $halfcycle - $inmemhold]
+    force CLK2 0
+}
+
+# step through the fetch states
+# called while in middle of FETCH_1 state (processor is sending PC to memory controller and asking to read the instruction word)
+# returns in middle of new instruction's first state with clock just dropped
+#  input:
+#   opc = 16-bit opcode the memory is supposed to be sending
+proc FinishFetch {opc} {
+    global fullcycle
+    global halfcycle
+    global inmemrecv
+    global inmemhold
+    global irloadrcv
+    global memrdbus
+    global seqsuf
+
+    StepState
+    VfyState fetch2                         ;# now in middle of fetch2 (data is coming back from memory)
+
+    if {$memrdbus == "**"} {
+        run [expr $irloadrcv - $halfcycle]  ;# give it a few more nanoseconds to make it
+        ForceIRPair $opc                    ;# stuff opcode in sequencer's IR
+        run [expr $fullcycle - $irloadrcv]  ;# give it a little time to soak in to our registers and decoders
+
+        force CLK2 1                        ;# start kerchunking it into our state machine
+        run $inmemhold                      ;# assume memory holds on bus at least this long before fading
+    } else {
+        run [expr $inmemrecv - $halfcycle]  ;# give it a few more nanoseconds to make it
+        force $memrdbus 0b$opc              ;# the opcode data has arrived
+        run [expr $fullcycle - $inmemrecv]  ;# give it a little time to soak in to our registers and decoders
+
+        force CLK2 1                        ;# start kerchunking it into our state machine
+        run $inmemhold                      ;# assume memory holds on bus at least this long before fading
+        force $memrdbus 0bxxxxxxxxxxxxxxxx  ;# so now all the incoming memory data has faded away
+    }
+
+    run [expr $halfcycle - $inmemhold]      ;# step half way into instruction's first cycle
+    force CLK2 0                            ;# drop clock
+
+    set cpo [string map {0 1 1 0} $opc]
+    VerifyV  IR$seqsuf $opc                  ;# make sure opcode made it into instruction register
+    VerifyV _IR$seqsuf $cpo
+
+    switch [string range $opc 0 2] {
+        000 {
+            set cond [string range $opc 3 5][string range $opc 15 15]
+            if {$cond == 0000} {
+                switch [string range $opc 13 14] {
+                    00 { VfyState halt1 }
+                    01 { VfyState iret1 }
+                    10 { VfyState wrps1 }
+                    11 { VfyState rdps1 }
+                }
+            } else {
+                if { [exists bcc1q$seqsuf] } {
+                    Verify bcc1q$seqsuf 1
+                }
+            }
+        }
+        001 {
+            if {[string range $opc 6 8] == 111} {
+                VfyState arith1pc
+            } else {
+                VfyState arith1
+            }
+        }
+        010 { VfyState store1w }
+        011 { VfyState store1b }
+        100 { VfyState lda1    }
+        101 { VfyState load1b  }
+        110 { VfyState load1w  }
+        111 { VfyState load1b  }
+    }
+}
+
+# format val as a 16-char binary string
+#  input:
+#   val = value to format
+#   one = what to use for 1, either 1 or z
+proc FormatBin {val one {nd 16}} {
+    set bin ""
+    for {set mask [expr 1 << ($nd - 1)]} {$mask >= 1} {set mask [expr $mask / 2]} {
+        if {$val & $mask} {
+            set bin "${bin}${one}"
+        } else {
+            set bin "${bin}0"
+        }
+    }
+    return $bin
+}
+
+# convert string of binary digits to integer equivalent
+proc FromBin {digits} {
+    set r 0
+    foreach d [split $digits {}] {
+        incr r $r
+        incr r $d
+    }
+    return $r
+}
+
+# called at beginning to reset processor
+# returns with processor halfway through state reset1
+proc ResetProcessor { } {
+    global halfcycle
+
+    force CLK2 0
+    force IRQ 0
+    force RESET 1
+    run $halfcycle
+    force RESET 0
+    StepState
+    VfyState reset1     ;# half way through reset1 clock just dropped
+}
+
+# force IR and _IR inputs to the given 16-bit binary value
+# valu may contain 0, 1, x bits
+proc ForceIRPair {valu} {
+    set comp [string map {0 1 1 0} $valu]
+    force  IR 0b$valu
+    force _IR 0b$comp
+}

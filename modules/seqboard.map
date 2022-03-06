@@ -1,0 +1,135 @@
+
+#    I               C
+#    N               O
+#    S               N
+# I  T     STATE     T  C
+# R  D               R  T
+# B  E               O  L
+# U  C   FLIPFLOPS   L  A
+# S  O               G
+#    D               E
+#    E               N
+
+manual Conn/abbus [87,1] CW
+manual Conn/irbus [1,87] NORM
+manual Conn/dbus  [87,191] CCW
+manual Conn/ctla  [191,87] FLIP
+manual Conn/power [140,192] CCW
+manual Cap/power  [141.5,190] L
+
+col width 1.4 {
+   1.3 x  1.8  at   1.40, 8.50  0._loadimm/seq[0:0]2        # ~(IR[12] & IR[11] & IR[10] & rdnotpc & _IR[6] & _IR[5] & _IR[4] & _IR[3] & _ir2 & _IR[1] & _IR[0])
+
+   1.3 x  0.6  at   9.20, 4.90  0._ir2/seq[0:0]1            # ~IR[2]
+   1.3 x  0.6  at   5.30,12.40  0.ir2/seq[0:0]1             # ~_IR[2]
+
+   1.3 x  1.2  at   7.90,13.90  0._halt1d/seq[0:0]2         # ~(fetch2q_a & topthreezero & specialinstr & _ir2 & _IR[1])
+   1.3 x  1.2  at   1.40, 3.10  0._iret1d/seq[0:0]2         # ~(fetch2q_a & topthreezero & specialinstr & _ir2 &  IR[1])
+   1.3 x  1.2  at   6.60,12.40  0._wrps1d/seq[0:0]2         # ~(fetch2q_a & topthreezero & specialinstr &  ir2 & _IR[1])
+   1.3 x  1.2  at  17.00,13.90  0._rdps1d/seq[0:0]2         # ~(fetch2q_a & topthreezero & specialinstr &  ir2 &  IR[1])
+
+   1.3 x  0.9  at   2.70, 4.90  0._bcc1d/seq[0:0]3          # ~(fetch2q_a & topthreezero & ~specialinstr)
+   1.3 x  0.6  at   2.70, 5.80  0._bcc1d/seq[0:0]1
+
+   1.3 x  0.9  at  17.00,17.00  0.rdnotpc/seq[0:0]2         # ~(IR[7] & IR[8] & IR[9])
+
+   1.3 x  1.5  at  10.50, 4.90  0.specialinstr/seq[0:0]2    # ~(IR[12] | IR[11] | IR[10] | IR[0])
+   1.3 x  1.2  at  11.80, 4.90  0.topthreezero/seq[0:0]2    # ~(IR[15] | IR[14] | IR[13])
+   1.3 x  0.9  at  13.10, 6.70  0._arith1d/seq[0:0]2        # ~(fetch2q_a & _IR[15] & _IR[14] & IR[13])
+   1.3 x  0.9  at   4.00, 6.70  0._store1d/seq[0:0]2        # ~(fetch2q_b & _IR[15] & IR[14])
+   1.3 x  2.1  at   4.00, 8.50  0._load1d/seq[0:0]4         # ~(fetch2q_b & IR[15] & IR[14] | fetch2q_b & IR[15] & _IR[14] & IR[13])
+   1.3 x  0.9  at  13.10, 8.50  0._lda1d/seq[0:0]2          # ~(fetch2q_b & IR[15] & _IR[14] & _IR[13])
+}
+
+col width 4.0 cellheight 1.8 {
+   1.3 x  1.2  at   6.60, 1.40  0.DFF/reset0/seq            #       res_a
+   3.9 x  1.8  at   6.60,12.50  0.DFF/ireq2/seq             # clk_a res_b
+   3.9 x  1.8  at   4.00,10.40  0.DFF/ireq5/seq             # clk_a res_c
+   3.9 x  1.5  at  10.50,10.40  0.DFF/load1/seq             # clk_c res_d
+   3.9 x  1.5  at   4.00, 8.60  0.DFF/lda1/seq              # clk_d res_e
+   3.9 x  1.5  at   9.20, 7.10  0.DFF/arith1/seq            # clk_d res_f
+   3.9 x  1.5  at   1.40, 1.40  0.DFF/wrps1/seq             # clk_e res_g
+   3.9 x  1.8  at  10.50, 5.30  0.DFF/iret2/seq             # clk_e res_h
+}
+
+col width 4.0 cellheight 1.8 {
+   3.9 x  1.8  at   7.90, 1.40  0.DFF/reset1/seq            # clk_a res_a
+   3.9 x  1.8  at  10.50,12.50  0.DFF/ireq3/seq             # clk_a res_b
+   3.9 x  1.5  at  13.10, 1.40  0.DFF/fetch1/seq            # clk_b res_c
+   3.9 x  1.8  at  14.40,10.40  0.DFF/load2/seq             # clk_b res_d
+   3.9 x  1.5  at  10.50, 8.60  0.DFF/store1/seq            # clk_c res_e
+   3.9 x  1.5  at  14.40, 7.10  0.DFF/bcc1/seq              # clk_d res_f
+   3.9 x  1.5  at  14.40,14.30  0.DFF/rdps1/seq             # clk_e res_g
+   3.9 x  1.8  at  14.40, 5.30  0.DFF/iret3/seq             # clk_e res_h
+}
+
+col width 4.0 cellheight 1.8 {
+   3.9 x  1.5  at   2.70,12.50  0.DFF/ireq1/seq             # clk_a res_a
+   3.9 x  1.8  at  14.40,12.50  0.DFF/ireq4/seq             # clk_b res_b
+   3.9 x  1.8  at  13.10, 3.20  0.DFF/fetch2/seq            # clk_b res_c
+   3.9 x  1.5  at   7.90,14.30  0.DFF/load3/seq             # clk_c res_d
+   3.9 x  1.8  at  14.40, 8.60  0.DFF/store2/seq            # clk_c res_e
+   3.9 x  1.5  at   2.70,14.30  0.DFF/halt1/seq             # clk_d res_f
+   3.9 x  1.5  at   6.60, 5.30  0.DFF/iret1/seq             # clk_d res_g
+   3.9 x  1.8  at   2.70, 3.20  0.DFF/iret4/seq             # clk_e res_h
+}
+
+col width 1.4 {
+   1.3 x  0.6  at   5.30, 2.20  0._res_a/seq[0:0]1    FLIP
+   1.3 x  0.6  at   4.00, 1.00  0.clk0_a/seq[0:0]1    FLIP
+   1.3 x  0.6  at  13.10,12.40  0._ireq1d/seq[0:0]3         #1.0 ~(~_irqpend & instend)
+   1.3 x  0.6  at  11.80,12.40  0._res_b/seq[0:0]1    FLIP
+   1.3 x  0.6  at  13.10,13.00  0._ireq1d/seq[0:0]1
+   1.3 x  0.6  at  13.10, 5.50  0._res_c/seq[0:0]1    FLIP
+   1.3 x  0.6  at  13.10, 2.50  0._fetch1d/seq[0:0]2        #    ~( _irqpend & instend)
+   1.3 x  0.6  at  13.10, 4.90  0.clk0_b/seq[0:0]1    FLIP
+   1.3 x  0.6  at   1.40, 4.30  0.fetch2q_a/seq[0:0]1       #3.0 ~_fetch2q
+   1.3 x  0.6  at   2.70, 8.50  0._res_d/seq[0:0]1    FLIP
+   1.3 x  0.6  at   4.00, 7.60  0.fetch2q_b/seq[0:0]1       #3.0 ~_fetch2q
+   1.3 x  0.6  at   2.70, 7.30  0._res_e/seq[0:0]1    FLIP
+   1.3 x  0.6  at  13.10, 9.40  0._load2s/seq[0:0]2         #    ~(load2q &  _loadimm)
+   1.3 x  0.6  at   2.70, 6.70  0.clk0_c/seq[0:0]1    FLIP
+   1.3 x  2.1  at  10.50, 1.00  0.instend/seq[0:0]2         #4.3 ~(_reset1q & _iret4q & _bcc1q & _arith1q & _store2q & _lda1q & _load2s & _ireq5q & _wrps1q & _rdps1q & _load3q & _halt1q)
+   1.3 x  0.6  at   1.40, 4.90  0._res_f/seq[0:0]1    FLIP
+   1.3 x  0.6  at  13.10,15.40  0._load3d/seq[0:0]3         #4.0 ~(load2q & ~_loadimm)
+   1.3 x  0.6  at   9.20, 5.50  0.clk0_d/seq[0:0]1    FLIP
+   1.3 x  0.6  at   9.20,13.90  0._load3d/seq[0:0]1
+   1.3 x  0.6  at   9.20, 6.10  0._res_g/seq[0:0]1    FLIP
+   1.3 x  0.6  at   7.90,15.10  0._fetch2q_a/seq[0:0]1      #3.0 ~fetch2q
+   1.3 x  0.6  at   7.90, 4.90  0.clk0_e/seq[0:0]1    FLIP
+   1.3 x  0.6  at   7.90, 5.50  0._res_h/seq[0:0]1    FLIP
+}
+
+col width 1.4 {
+   1.3 x  0.9  at   5.30,16.00  0._PSW_IECLR/seq[0:0]2      #1.5 ~(reset1q | ireq4q)
+   1.3 x  1.2  at   2.70,13.90  0.BMUX_CON_0/seq[0:0]2      #3.0 ~(_reset1q & _fetch1q & _ireq2q & _ireq4q & _rdps1q)
+   1.3 x  1.2  at   4.00,13.90  0.BMUX_CON_2/seq[0:0]2      #3.8 ~(_fetch2q_a & _ireq1q & _ireq5q & _iret3q & _load3q)
+   1.3 x  1.2  at  17.00,16.00  0.GPRS_WE7/seq[0:0]4        #4.1 ~(_reset1q & _fetch2q_a & _ireq5q & _iret2q & _load3q & ~(bcc1q & PSW_BT))
+   1.3 x  0.6  at  15.70,16.00  0.GPRS_WE7/seq[0:0]2
+   1.3 x  0.9  at   2.70,15.10  0.BMUX_CON__4/seq[0:0]2     #4.5 ~(_iret1q & _iret3q & _ireq1q & _ireq3q)
+   1.3 x  0.9  at   6.60,16.00  0._PSW_REB/seq[0:0]2        #4.5 ~(ireq2q | rdps1q)
+   1.3 x  0.6  at  11.80, 1.00  0._irqpend/seq[0:0]2        # ~(IRQ & PSW_IE)
+   1.3 x  2.1  at   5.30,13.90  0.ALU_BONLY/seq[0:0]2       #5.0 ~(_reset1q & _store2q & _load2q & _ireq5q & _iret1q & _iret2q & _iret3q & _iret4q & _ireq1q & _ireq3q & _wrps1q & _halt1q)
+   1.3 x  0.6  at  15.70, 1.90  0._arithnotpc/seq[0:0]2
+   1.3 x  0.9  at  13.10,16.00  0.GPRS_WED/seq[0:0]2        #5.5 ~(_arith1q & _lda1q & _load2q & _rdps1q)
+                                                            #6.0 HALT = halt1q
+   1.3 x  0.6  at   1.40,13.90  0.BMUX_IRBROF/seq[0:0]1     #6.0 ~_bcc1q
+   1.3 x  0.9  at  14.40,16.00  0.GPRS_REB/seq[0:0]2        #6.3 ~(_arith1q & _wrps1q & _halt1q)
+}
+
+col width 1.4 {
+   1.3 x  0.9  at  15.70,17.20  0.MEM_WRITE/seq[0:0]2       #2.7 ~(_ireq1q & _ireq3q & _store1q)
+   1.3 x  0.6  at   4.00,16.00  0._IR_WE/seq[0:0]1          #3.0 ~fetch2q
+   1.3 x  1.2  at  10.50,16.00  0.GPRS_REA7/seq[0:0]2       #3.6 ~(_fetch1q & _fetch2q_a & _bcc1q & _ireq4q & _load3q)
+   1.3 x  1.8  at  17.00, 1.00  0.ALU_ADD/seq[0:0]2         #4.1 ~(_fetch1q & _fetch2q_a & _bcc1q & _store1q & _lda1q & _load1q & _ireq2q & _ireq4q & _load3q & _rdps1q)
+   1.3 x  0.6  at   4.00,16.60  0.MEM_WORD/seq[0:0]4        #4.3 ~(~(_load1q & _load2q & _store1q) & IR[13])
+   1.3 x  0.9  at   2.70,16.00  0.MEM_WORD/seq[0:0]2
+   1.3 x  0.9  at   1.40,14.50  0.BMUX_IRLSOF/seq[0:0]2     #4.7 ~(_store1q & _lda1q & _load1q)
+                                                            #5.0 GPRS_RED2B = store2q
+   1.3 x  0.6  at   4.00, 1.60  0._clk1/seq[0:0]1     FLIP  # ~CLK2
+   1.3 x  0.9  at  11.80,16.00  0.GPRS_REA/seq[0:0]2        #5.0 ~(_arith1q & _store1q & _lda1q & _load1q)
+   1.3 x  0.9  at   7.90,16.00  0.PSW_WE/seq[0:0]2          #5.3 ~(_reset1q & _iret4q & _wrps1q)
+   1.3 x  0.9  at   1.40,16.00  0.MEM_READ/seq[0:0]2        #5.5 ~(_fetch1q & _iret1q & _iret3q & _load1q)
+   1.3 x  0.6  at   9.20,16.00  0.PSW_ALUWE/seq[0:0]1       #6.0 ~_arith1q
+   1.3 x  0.9  at  17.00,17.20  0.MEM_REB/seq[0:0]2         #6.7 ~(_load2q & _iret2q & _iret4q)
+}

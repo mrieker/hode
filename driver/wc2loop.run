@@ -1,0 +1,1 @@
+nohup ./raspictl.armv7l -cpuhz 180000 -mintimes -oddok wc2loop.hex < /dev/null > wc2loop.log 2>&1 &

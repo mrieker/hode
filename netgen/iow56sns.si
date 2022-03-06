@@ -1,0 +1,5 @@
+# serial numbers of IOW56Paddles plugged into the A,C,I,D connectors
+export iow56sn_a=10003FEB
+export iow56sn_c=10003FF0
+export iow56sn_i=10003FEA
+export iow56sn_d=10003FEF
