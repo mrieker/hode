@@ -172,8 +172,9 @@ notcon:;
     }
 
     // no more optimizations, compute condition expression then test-and-jump on the result
+    Expr *boolexpr = condexpr->exprscope->castToType (condexpr->exprtoken, booltype, condexpr);
     TestPrim *tp = new TestPrim (condexpr->exprscope, condexpr->exprtoken);
-    prevprim = condexpr->generexpr (prevprim, &tp->aval);
+    prevprim = boolexpr->generexpr (prevprim, &tp->aval);
     tp->opcode = sense ? OP_CMPNE : OP_CMPEQ;
     tp->flonexts.push_back (gotolbl);
     return prevprim->setLinext (tp);

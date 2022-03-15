@@ -25,11 +25,11 @@
 #include <string.h>
 
 #define EXTENDSIZE 1024
-#define MINSIZE 64
+#define MINSIZE 16
 #define NGUARDS 0
-#define OVERHEAD 16         // must include room for Block plus c-array size word (see __malloc2)
+#define OVERHEAD 8          // must include room for Block plus c-array size word (see __malloc2)
 #define POISON 0xDEADU
-#define VERIFY 0
+#define VERIFY 1
 
 #define PTR2BLK(p) ((Block *)((__size_t) (p) - (NGUARDS + 1) * OVERHEAD))
 #define BLK2PTR(b) ((void *)((__size_t) (b) + (NGUARDS + 1) * OVERHEAD))

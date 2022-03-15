@@ -5,7 +5,7 @@ AR  = ../asm/archive.$(MACH)
 ASM = ../asm/assemble.$(MACH)
 LNK = ../asm/link.$(MACH)
 
-LIB = abort.hode.o arith.hode.o assert.hode.o bootpage.hode.o comp.hode.o complexd.hode.o complexf.hode.o endtags.hode.o float.hode.o fpmp.hode.o malloc.hode.o mathd.hode.o mathf.hode.o qsort.hode.o sserv.hode.o start.hode.o stdio.hode.o strerror.hode.o string.hode.o strtoul.hode.o throw.hode.o vxprintf.hode.o vxprintf_fp.hode.o
+LIB = abort.hode.o arith.hode.o assert.hode.o bootpage.hode.o comp.hode.o complexd.hode.o complexf.hode.o endtags.hode.o float.hode.o fpmp.hode.o malloc.hode.o mathd.hode.o mathf.hode.o qsort.hode.o sserv.hode.o start.hode.o stdio.hode.o strerror.hode.o string.hode.o strtod.hode.o strtoul.hode.o throw.hode.o vxprintf.hode.o vxprintf_fp.hode.o
 
 default: assemble.hex circus.hex printpi.hex
 
@@ -100,6 +100,9 @@ strerror.hode.o: strerror.c
 
 string.hode.o: string.asm
 	$(ASM) string.asm string.hode.o > string.lis
+
+strtod.hode.o: strtod.c
+	$(CC) strtod
 
 strtoul.hode.o: strtoul.c
 	$(CC) strtoul

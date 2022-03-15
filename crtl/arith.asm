@@ -907,6 +907,8 @@ __shr_qqW:
 	sbb	%r5,%r5,%r5
 	br	shr_QQW_common
 
+shr_QQW_63: .word 63
+
 	.global	__shr_QQW
 __shr_QQW:
 	lda	%r6,-20(%r6)
@@ -924,7 +926,7 @@ shr_QQW_common:
 	; R5 = sign/zero-extend word
 
 	; R2 = masked number of bits to shift by
-	ldw	%r3,#63
+	ldw	%r3,shr_QQW_63
 	and	%r2,%r2,%r3
 
 	; R3 = number of whole words to shift by
@@ -957,17 +959,17 @@ shr_QQW_copyskip:
 	stw	%r1,-62(%r6)
 
 	; sign/zero-extend that many top result words
-	shl	%r3,%r3
-	sub	%r4,%pc,%r3
+	shl	%r4,%r3
+	sub	%r1,%pc,%r4
 shr_QQW_padbase:
-	lda	%pc,shr_QQW_padskip-shr_QQW_padbase(%r4)
+	lda	%pc,shr_QQW_padskip-shr_QQW_padbase(%r1)
 	stw	%r5,2(%r0)
 	stw	%r5,4(%r0)
 	stw	%r5,6(%r0)
 shr_QQW_padskip:
 
 	; offset result pointer by that much
-	sub	%r0,%r0,%r3
+	sub	%r0,%r0,%r4
 	stw	%r0,-60(%r6)
 
 	; get number of bits in word to shift by
@@ -975,10 +977,10 @@ shr_QQW_padskip:
 	and	%r2,%r2,%r0
 
 	; get negative word count to shift
-	;  skip=0: negcount=-4
-	;  skip=1: negcount=-3
-	;  skip=2: negcount=-2
-	;  skip=3: negcount=-1
+	;  skip=0: negcount=-4; 4 words to copy and shift
+	;  skip=1: negcount=-3; 3 words to copy and shift
+	;  skip=2: negcount=-2; 2 words to copy and shift
+	;  skip=3: negcount=-1; 1 word  to copy and shift
 	lda	%r3,-4(%r3)
 
 shr_QQW_wordloop:

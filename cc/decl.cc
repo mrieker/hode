@@ -18,6 +18,7 @@
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
+#include <math.h>
 #include <assert.h>
 #include <string.h>
 
@@ -211,7 +212,7 @@ NumDecl *NumDecl::createtyped (Token *deftok, Type *type, NumCat nc, NumValue nv
         assert (nd->numcat == nc);
         assert (nd->getType ()->stripCVMod () == typenc);
         switch (nc) {
-            case NC_FLOAT: assert (nd->numval.f == nv.f); break;
+            case NC_FLOAT: assert ((isnan (nd->numval.f) && isnan (nv.f)) || (nd->numval.f == nv.f)); break;
             case NC_SINT:  assert (nd->numval.s == nv.s); break;
             case NC_UINT:  assert (nd->numval.u == nv.u); break;
             default: assert_false ();

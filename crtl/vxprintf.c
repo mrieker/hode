@@ -17,22 +17,6 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
-//+++2003-11-18
-//    Copyright (C) 2001,2002,2003  Mike Rieker, Beverly, MA USA
-//
-//    This program is free software; you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; version 2 of the License.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program; if not, write to the Free Software
-//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//---2003-11-18
 
 /************************************************************************/
 /*                                                                      */
@@ -81,10 +65,6 @@
 /*      'entry' routine is called whenever the buff fills.  If it       */
 /*      wants, it can alter the size and address of the buffer before   */
 /*      it returns.                                                     */
-/*                                                                      */
-/*      Extra format types:                                             */
-/*                                                                      */
-/*        %S - printable string - arg is one char *                     */
 /*                                                                      */
 /************************************************************************/
 
@@ -270,8 +250,11 @@ gotfinal:
 
       /* Floating point convertions - in a different module so this one can be compiled without floating point */
 
+      case 'A':
       case 'E':
+      case 'F':
       case 'G':
+      case 'a':
       case 'e':
       case 'f':
       case 'g': {
@@ -391,7 +374,7 @@ int putfc (Par *p, int s, char c)
   return (0);
 }
 
-/* Output string, flush if full */
+/* Output string */
 
 int putst (Par *p, int s, char const *b)
 {
@@ -421,23 +404,23 @@ int putst (Par *p, int s, char const *b)
   return (0);
 }
 
-/* Output single character, flush if full */
+/* Output single character */
 
 int putch (Par *p, char c)
 {
   int siz, sts;
 
-  *(p -> op ++) = c;                                                            // store character in buffer
-  p -> numout ++;                                                               // one more char has been output
-  p -> minwidth --;                                                             // one less char needed to fill output field minimum width
   if (p -> op == p -> oe) {                                                     // see if buffer is full
     siz = p -> oe - p -> ob;                                                    // number of bytes being written = the whole buffer
-    sts = (*(p -> entry)) (p -> param, &siz, &(p -> ob), 0);                    // if so, flush it
+    sts = (*(p -> entry)) (p -> param, &siz, &(p -> ob), 0);                    // write it out to file
     if (sts < 0) return (sts);                                                  // return any error status
     p -> op = p -> ob;                                                          // reset buffer pointer
     p -> oe = p -> ob + siz;
   }
 
+  *(p -> op ++) = c;                                                            // store character in buffer
+  p -> numout ++;                                                               // one more char has been output
+  p -> minwidth --;                                                             // one less char needed to fill output field minimum width
   return (0);
 }
 

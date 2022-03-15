@@ -1085,6 +1085,7 @@ void LdAddrStkMach::dumpmach (FILE *f)
 LdImmLblMach::LdImmLblMach (int line, Token *token, Reg *rd, LabelMach *lbl)
     : Mach (line, token)
 {
+    assert (lbl != nullptr);
     this->lbl = lbl;
     this->madeshort = false;
 

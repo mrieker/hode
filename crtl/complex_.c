@@ -67,14 +67,12 @@ CType CType::div (CType x)
     return y;
 }
 
-CData CType::abs ()
+// 1 / (1 / this + 1 / x))
+CType CType::par (CType x)
 {
-    return CMath (sqrt) (this->real * this->real + this->imag * this->imag);
-}
-
-CData CType::ang ()
-{
-    return CMath (atan2) (this->imag, this->real);
+    CType n = this->mul (x);
+    CType d = this->add (x);
+    return n.div (d);
 }
 
 CType CType::neg ()
@@ -83,6 +81,26 @@ CType CType::neg ()
     y.real = - this->real;
     y.imag = - this->imag;
     return y;
+}
+
+// 1.0 / this
+CType CType::rec ()
+{
+    CData d = this->real * this->real + this->imag * this->imag;
+    CType y;
+    y.real =   this->real / d;
+    y.imag = - this->imag / d;
+    return y;
+}
+
+CData CType::abs ()
+{
+    return CMath (sqrt) (this->real * this->real + this->imag * this->imag);
+}
+
+CData CType::ang ()
+{
+    return CMath (atan2) (this->imag, this->real);
 }
 
 void CType::addeq (CType x)

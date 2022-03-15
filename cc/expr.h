@@ -173,7 +173,7 @@ struct MFuncExpr : Expr {
     virtual Prim *generexpr (Prim *prevprim, ValDecl **exprval_r);
     Prim *lookupvirtualfunction (Prim *prevprim, CallPrim *cp);
 
-    Expr *ptrexpr;          // pointer expression
+    Expr *ptrexpr;          // pointer expression, ie, 'this' value passed to member function
     StructType *memstruct;  // struct it was found in (might be a parent)
     FuncDecl *memfunc;      // member function being accessed
 };

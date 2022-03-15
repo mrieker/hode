@@ -1957,7 +1957,7 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                 // maybe accessing member function (not a member that is a pointer to a function)
                 if (memfunc != nullptr) {
                     MFuncExpr *mfx = new MFuncExpr (this, tok);
-                    mfx->ptrexpr   = structexpr;
+                    mfx->ptrexpr   = castToType (tok, memstruct->getPtrType (), structexpr);
                     mfx->memstruct = memstruct;
                     mfx->memfunc   = memfunc;
                     exstack.push_back (mfx);
@@ -2406,11 +2406,42 @@ Expr *Scope::newBinopArith (Token *optok, Opcode opcode, Expr *leftexpr, Expr *r
             return bx;
         }
 
+        // if one operand is unsigned and smaller than the other,
+        // cast the larger one to smaller size cuz the top bits are zeroes
+        // this is useful for 'if (someuint64 & 1) ...'
+        case OP_BITAND: {
+            IntegType *leftintype = leftexpr->getType ()->stripCVMod ()->castIntegType ();
+            IntegType *riteintype = riteexpr->getType ()->stripCVMod ()->castIntegType ();
+            if ((leftintype == nullptr) || (riteintype == nullptr)) {
+                throwerror (optok, "both operands must be integers");
+            }
+            tsize_t leftsize = leftintype->getTypeSize (optok);
+            tsize_t ritesize = riteintype->getTypeSize (optok);
+            if (leftsize < ritesize) {
+                if (leftintype->getSign ()) {
+                    NumValue nv;
+                    NumCat nc = leftexpr->isNumConstExpr (&nv);
+                    if (nc != NC_SINT) goto noreducedand;
+                    if (nv.s < 0) goto noreducedand;
+                }
+                riteexpr = castToType (optok, leftintype, riteexpr);
+            } else if (ritesize < leftsize) {
+                if (riteintype->getSign ()) {
+                    NumValue nv;
+                    NumCat nc = riteexpr->isNumConstExpr (&nv);
+                    if (nc != NC_SINT) goto noreducedand;
+                    if (nv.s < 0) goto noreducedand;
+                }
+                leftexpr = castToType (optok, riteintype, leftexpr);
+            }
+        noreducedand:;
+            // fallthrough
+        }
+
         // both operands must be integer numerics
         // weaker auto-cast to stronger
         case OP_BITOR:
-        case OP_BITXOR:
-        case OP_BITAND: {
+        case OP_BITXOR: {
             Type *restyp  = getStrongerIArith (optok, leftexpr->getType (), riteexpr->getType ());
             BinopExpr *bx = new BinopExpr (this, optok);
             bx->opcode    = opcode;

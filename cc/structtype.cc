@@ -738,11 +738,11 @@ tsize_t StructType::fillvtableinit (tsize_t vtindex, StructInitExpr *vtinitexpr)
                     FuncDecl *parentfuncdecl = vx->valdecl->castFuncDecl ();
                     assert (parentfuncdecl != nullptr);
 
-                    fprintf (stderr, "StructType::fillvtableinit*: %s[%u] %s::%s: function %s::%s being overidden by %s::%s__%s\n",
-                                vtinitexpr->structype->getName (), oldindex,
-                                exttype->getName (), vtentryname,
-                                parentfuncdecl->getEncType ()->getName (), parentfuncdecl->getName (),
-                                exttype->getName (), this->getName (), childfuncdecl->getName ());
+                    ////fprintf (stderr, "StructType::fillvtableinit*: %s[%u] %s::%s: function %s::%s being overidden by %s::%s__%s\n",
+                    ////            vtinitexpr->structype->getName (), oldindex,
+                    ////            exttype->getName (), vtentryname,
+                    ////            parentfuncdecl->getEncType ()->getName (), parentfuncdecl->getName (),
+                    ////            exttype->getName (), this->getName (), childfuncdecl->getName ());
 
                     // childfuncdecl has 'this' type of child
                     // it will be called with 'this' type of parent

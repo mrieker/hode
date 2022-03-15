@@ -66,7 +66,7 @@ typedef __uint64_t uQuad;
 
 /* Get floating point into fnum and expon:  fnum normalised in range 1.0 (inclusive) to 10.0 (exclusive) such that original_value = fnum * 10 ** expon */
 
-#define GETFLOATNUM if (! vxprintf_getfnum (p)) goto infnan
+#define GETFLOATNUM(scale) if (! vxprintf_getfnum (p, scale)) goto infnan
 
 /* Parameter block passed to various 'put' routines */
 
@@ -127,7 +127,7 @@ int putst   (Par *p, int s, char const *b);
 int putch   (Par *p, char c);
 void vxprintf_getunum (Par *p);
 void vxprintf_getsnum (Par *p);
-int  vxprintf_getfnum (Par *p);
+int  vxprintf_getfnum (Par *p, bool scale);
 void vxprintf_roundflt (Par *p, int prec);
 char const *vxprintf_getfmtint (Par *p, char const *fp, int *fi_r);
 

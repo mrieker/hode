@@ -17,22 +17,6 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
-//+++2003-11-18
-//    Copyright (C) 2001,2002,2003  Mike Rieker, Beverly, MA USA
-//
-//    This program is free software; you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; version 2 of the License.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program; if not, write to the Free Software
-//    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//---2003-11-18
 
 /************************************************************************/
 /*                                                                      */
@@ -57,7 +41,7 @@ int vxprintf_fp (char fc, Par *p, va_list ap, va_list *ap_r)
   switch (fc) {
     case 'G':
     case 'g': {                                                                 // - either 'e'/'E' or 'f', depending on value
-      GETFLOATNUM;                                                              // get floating point number to be converted
+      GETFLOATNUM (1);                                                          // get floating point number to be converted
       if (p -> precision < 0) p -> precision = 6;                               // fix up the given precision
       if (p -> precision == 0) p -> precision = 1;
       ROUNDFLOAT (p -> precision - 1);                                          // round to given precision
@@ -72,17 +56,70 @@ int vxprintf_fp (char fc, Par *p, va_list ap, va_list *ap_r)
 
     case 'E':
     case 'e': {                                                                 // - floating point p -> expon notation
-      GETFLOATNUM;                                                              // get floating point number to be converted
+      GETFLOATNUM (1);                                                          // get floating point number to be converted
       if (p -> precision < 0) p -> precision = 6;                               // default of 6 places after decimal point
       ROUNDFLOAT (p -> precision);                                              // round to given precision
       goto format_e;
     }
 
+    case 'F':
     case 'f': {                                                                 // - floating point standard notation
-      GETFLOATNUM;                                                              // get floating point number to be converted
+      GETFLOATNUM (1);                                                          // get floating point number to be converted
       if (p -> precision < 0) p -> precision = 6;                               // default of 6 places after decimal point
       ROUNDFLOAT (p -> precision + p -> expon);                                 // round to given precision
       goto format_f;
+    }
+
+    case 'A':
+    case 'a': {                                                                 // - hexadecimal floating point
+      GETFLOATNUM (0);
+      PUTSIGN;
+      PUTCH ('0');
+      PUTCH ('x');
+      union { __flt64_t d; __uint64_t u; __uint16_t a[4]; } v;
+      v.d = p -> fnum;
+      int exp = v.a[3] / 16 % 0x800;
+      PUTCH ('0' + (exp != 0));
+      unsigned int i, j;
+      for (j = 0; j < 12; j ++) {
+        if (((v.u >> (j * 4)) & 15) != 0) break;
+      }
+      i = 13;
+      if (exp == 0) {
+        exp = 1;
+        do {
+          unsigned int k = i - 1;
+          unsigned int d = (v.u >> (k * 4)) & 15;
+          if (d != 0) break;
+          exp -= 4;
+          i = k;
+        } while (i > j);
+      }
+      if (i > j) {
+        PUTCH ('.');
+        do {
+          -- i;
+          unsigned int d = (v.u >> (i * 4)) & 15;
+          char c = (d < 10) ? '0' + d : fc + d - 10;
+          PUTCH (c);
+        } while (i > j);
+      }
+      PUTCH ('p');
+      exp -= 1023;
+      if (exp < 0) {
+        PUTCH ('-');
+        exp = - exp;
+      }
+      char buf[4];
+      i = 4;
+      do {
+        buf[--i] = exp % 10 + '0';
+        exp /= 10;
+      } while (exp > 0);
+      do {
+        PUTCH (buf[i]);
+      } while (++ i < 4);
+      goto done;
     }
   }
 
@@ -102,9 +139,10 @@ format_e:
   numsize = p -> precision;                                                     // size of number = number of digits after decimal point
   if ((numsize > 0) || p -> altform) numsize ++;                                //                + maybe it includes the decimal point
   numsize ++;                                                                   //                + always includes digit before decimal point
-  if (p -> negative || p -> plussign || p -> posblank) numsize ++;              //               + maybe it includes room for the sign
+  if (p -> negative || p -> plussign || p -> posblank) numsize ++;              //                + maybe it includes room for the sign
   numsize += 3;                                                                 //                + e/E and two p -> expon digits
-  if ((p -> expon < 0) || p -> plussign || p -> posblank) numsize ++;           //              + maybe it includes room for p -> expon sign
+  if ((p -> expon < -99) || (p -> expon > 99)) numsize ++;                      //                + maybe another exponent digit
+  if ((p -> expon < 0) || p -> plussign || p -> posblank) numsize ++;           //                + maybe it includes room for p -> expon sign
   PUTLEFTFILL (numsize);                                                        // output leading space padding
   PUTSIGN;                                                                      // output the sign character, if any
   PUTLEFTZERO (numsize);                                                        // output leading zero padding
@@ -122,6 +160,7 @@ format_e:
   p -> negative = (p -> expon < 0);                                             // get p -> expon sign
   if (p -> negative) p -> expon = - p -> expon;                                 // make p -> expon positive
   PUTSIGN;                                                                      // output the p -> expon sign character, if any
+  if (p -> expon > 99) PUTCH ((char) (p -> expon / 100) + '0');                 // output p -> expon hundreds digit
   PUTCH (((p -> expon / 10) % 10) + '0');                                       // output p -> expon tens digit
   PUTCH ((p -> expon % 10) + '0');                                              // output p -> expon units digit
   PUTRIGHTFILL;                                                                 // pad on right with spaces
@@ -164,12 +203,20 @@ format_f:
 
 /* Get floating point into p -> fnum and p -> expon:  p -> fnum normalised in range 1.0 (inclusive) to 10.0 (exclusive) such that original_value = p -> fnum * 10 ** p -> expon */
 
-int vxprintf_getfnum (Par *p)
+int vxprintf_getfnum (Par *p, bool scale)
 {
   switch (p -> fltsize) {
     case sizeof float: {
-      //TODO check nan/inf
-      p -> fnum = va_arg (p -> ap, float);
+      float flt = va_arg (p -> ap, float);
+      if (isnanf (flt)) {
+        p -> nfe = "nan";
+        return 0;
+      }
+      if (isinff (flt)) {
+        p -> nfe = (flt < 0.0) ? "-inf" : p -> plussign ? "+inf" : p -> posblank ? " inf" : "inf";
+        return 0;
+      }
+      p -> fnum = flt;
       break;
     }
     case sizeof double: {
@@ -179,7 +226,7 @@ int vxprintf_getfnum (Par *p)
         return 0;
       }
       if (isinf (p -> fnum)) {
-        p -> nfe = (p -> fnum < 0.0) ? "-inf" : "inf";
+        p -> nfe = (p -> fnum < 0.0) ? "-inf" : p -> plussign ? "+inf" : p -> posblank ? " inf" : "inf";
         return 0;
       }
       break;
@@ -189,7 +236,7 @@ int vxprintf_getfnum (Par *p)
   p -> negative = (p -> fnum < 0.0);
   if (p -> negative) p -> fnum = - p -> fnum;
   p -> expon = 0;
-  if (p -> fnum > 0.0) {
+  if (scale && (p -> fnum > 0.0)) {
     while (p -> fnum < 1.0) {
       p -> fnum *= 10.0;
       p -> expon --;

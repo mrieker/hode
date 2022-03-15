@@ -24,11 +24,38 @@
 	.include "../asm/magicdefs.asm"
 
 	.align	2
+
+	.global	fabs
+fabs:
+	ldw	%r2,-64(%r6)
+	ldw	%r1,-62(%r6)
+	stw	%r1,0(%r2)
+	ldw	%r1,-60(%r6)
+	stw	%r1,2(%r2)
+	ldw	%r1,-58(%r6)
+	stw	%r1,4(%r2)
+	ldw	%r1,-56(%r6)
+	ldw	%r0,fabs_7FFF
+	and	%r1,%r1,%r0
+	stw	%r1,6(%r2)
+	lda	%r6,10(%r6)
+	lda	%pc,0(%r3)
+fabs_7FFF: .word 0x7FFF
+
+	.global	fabsf
+fabsf:
+	ldw	%r1,-62(%r6)
+	ldw	%r0,fabs_7FFF
+	and	%r1,%r1,%r0
+	ldw	%r0,-64(%r6)
+	lda	%r6,4(%r6)
+	lda	%pc,0(%r3)
+
 	.global	isfinite
 isfinite:
 	clr	%r0
 	ldw	%r2,6-64(%r6)
-	ldw	%r1,#0x7FF0
+	ldw	%r1,isfin_7FF0
 	and	%r2,%r2,%r1
 	cmp	%r2,%r1
 	beq	notfin
@@ -36,6 +63,7 @@ isfinite:
 notfin:
 	lda	%r6,8(%r6)
 	lda	%pc,0(%r3)
+isfin_7FF0: .word 0x7FF0
 
 	.global	isinf
 isinf:
@@ -58,7 +86,7 @@ notinf:
 	.global	isnan
 isnan:
 	ldw	%r2,6-64(%r6)
-	ldw	%r1,#0x7FF0
+	ldw	%r1,isfin_7FF0
 	and	%r0,%r2,%r1
 	sub	%r0,%r0,%r1
 	bne	notnan
@@ -259,19 +287,45 @@ fpcomp:
 
 ;
 ; floatingpoint conversion
+;   __cvt_<resulttype><operandtype>
 ;  input:
 ;   R0 = l L q Q f d: where to put result
-;   R1 = w W: operand value
-;       else: where to get operand
-;   R2<15:08> = result type w W l L q Q f d z
-;   R2<07:00> = operand type w W l L q Q f d
+;   R1 = b B w W: operand value
+;           else: where to get operand
+;   R2<15:08> = result type b B w W l L q Q f d z
+;   R2<07:00> = operand type b B w W l L q Q f d
 ;   R3 = return address
 ;  output:
-;   R0 = w W z: result value
-;         else: same as input
+;   R0 = b B w W z: result value
+;             else: same as input
 ;   R1,R2,R3 = trashed
 ;   R4,R5 = same as input
 ;
+	.global	__cvt_Qd
+__cvt_Qd:
+	ldw	%r2,#'dQ'
+	br	cvt_fp
+
+	.global	__cvt_Qf
+__cvt_Qf:
+	ldw	%r2,#'fQ'
+	br	cvt_fp
+
+	.global	__cvt_dQ
+__cvt_dQ:
+	ldw	%r2,#'Qd'
+	br	cvt_fp
+
+	.global	__cvt_dW
+__cvt_dW:
+	ldw	%r2,#'Wd'
+	br	cvt_fp
+
+	.global	__cvt_db
+__cvt_db:
+	ldw	%r2,#'bd'
+	br	cvt_fp
+
 	.global	__cvt_df
 __cvt_df:
 	ldw	%r2,#'fd'
@@ -282,9 +336,9 @@ __cvt_dw:
 	ldw	%r2,#'wd'
 	br	cvt_fp
 
-	.global	__cvt_dW
-__cvt_dW:
-	ldw	%r2,#'Wd'
+	.global	__cvt_fQ
+__cvt_fQ:
+	ldw	%r2,#'Qf'
 	br	cvt_fp
 
 	.global	__cvt_fd

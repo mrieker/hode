@@ -28,7 +28,9 @@ struct CType {
     CType sub (CType x);
     CType mul (CType x);
     CType div (CType x);
+    CType par (CType x);
     CType neg ();
+    CType rec ();
     CData abs ();
     CData ang ();
 

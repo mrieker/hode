@@ -404,6 +404,13 @@ void Prim::replaceLabel (LabelPrim *oldlabel, LabelPrim *newlabel)
     assert (linext != oldlabel);
 }
 
+void FinCallPrim::replaceLabel (LabelPrim *oldlabel, LabelPrim *newlabel)
+{
+    if (finlblprim == oldlabel) finlblprim = newlabel;
+    if (retlblprim == oldlabel) retlblprim = newlabel;
+    this->Prim::replaceLabel (oldlabel, newlabel);
+}
+
 // mark any referenced labels as referenced
 void Prim::markLabelRefs ()
 {

@@ -760,6 +760,8 @@ static void mw_syscall (uint32_t sample, uint16_t data)
             uint16_t r2 = readmemword (data + 6);
             double value = 0.0;
             switch (r2 & 0xFF) {
+                case 'b': value = (double)  (sint8_t) r1; break;
+                case 'B': value = (double)  (uint8_t) r1; break;
                 case 'w': value = (double) (sint16_t) r1; break;
                 case 'W': value = (double) (uint16_t) r1; break;
                 case 'l': value = (double) (sint32_t) readmemlong (r1); break;
@@ -772,6 +774,8 @@ static void mw_syscall (uint32_t sample, uint16_t data)
             }
             //fprintf (stderr, "raspictl SCN_CVT_FP*: %c %g %c\n", r2 & 0xFF, value, r2 >> 8);
             switch (r2 >> 8) {
+                case 'b': r0 = (sint16_t) (sint8_t) value; break;
+                case 'B': r0 = (uint16_t) (uint8_t) value; break;
                 case 'w': r0 = (sint16_t) value; break;
                 case 'W': r0 = (uint16_t) value; break;
                 case 'l': writememlong (r0, (sint32_t) value); break;

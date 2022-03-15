@@ -258,6 +258,17 @@ static void doasmpass (char const *asmname)
 
     lineno = 0;
     while (fgets (asmline, sizeof asmline, asmfile) != NULL) {
+        int linelen = strlen (asmline);
+        if ((linelen == 0) || (asmline[linelen-1] != '\n')) {
+            if (linelen > sizeof asmline - 5) {
+                linelen = sizeof asmline - 5;
+            }
+            strcpy (asmline + linelen, "???\n");
+            int c;
+            while ((c = fgetc (asmfile)) >= 0) {
+                if (c == '\n') break;
+            }
+        }
         ++ lineno;
         memset (lisaddr, ' ', 4);
         memset (lisdata, ' ', 8);

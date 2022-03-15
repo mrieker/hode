@@ -76,7 +76,7 @@ struct Prim {
     virtual void replaceWrites (ValDecl *oldtemp, ValDecl *newtemp) { }
     virtual bool readsOrWritesVar (VarDecl *var) { return false; }
     virtual bool hasSideEffects () { return true; }
-    void replaceLabel (LabelPrim *oldlabel, LabelPrim *newlabel);
+    virtual void replaceLabel (LabelPrim *oldlabel, LabelPrim *newlabel);
     void markLabelRefs ();
 
     virtual AsnopPrim *castAsnopPrim () { return nullptr; }
@@ -261,6 +261,7 @@ struct FinCallPrim : Prim {
 
     virtual Prim *setLinext (Prim *nextprim);
     virtual bool hasFallthru () { return false; }
+    virtual void replaceLabel (LabelPrim *oldlabel, LabelPrim *newlabel);
     virtual char *primstr ();
     virtual void assemprim (MachFile *mf);
 };

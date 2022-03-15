@@ -34,6 +34,8 @@ int           main    (int argc, char **argv);
 void         *malloc  (__size_t size);
 void          qsort   (void *base, __size_t nmemb, __size_t size, qsortcompar_t *compar);
 void         *realloc (void *ptr, __size_t size);
+double        strtod  (char const *nptr, char **endptr);
+float         strtof  (char const *nptr, char **endptr);
 unsigned long strtoul (char const *nptr, char **endptr, unsigned int base);
 
 #endif
