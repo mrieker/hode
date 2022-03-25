@@ -164,39 +164,54 @@ NumDecl *NumDecl::createsizeint (tsize_t val, bool sined)
 }
 
 // create typed number declaration of the given value
+// if type null, get smallest type that holds value
 NumDecl *NumDecl::createtyped (Token *deftok, Type *type, NumCat nc, NumValue nv)
 {
-    Type *typenc = type->stripCVMod ();
+    Type *typenc = (type == nullptr) ? nullptr : type->stripCVMod ();
     char *name;
     switch (nc) {
         case NC_FLOAT: {
-            FloatType *ft = typenc->castFloatType ();
-            assert (ft != nullptr);
-            asprintf (&name, "(%s)%A", ft->getName (), nv.f);
+            if (typenc != nullptr) {
+                FloatType *ft = typenc->castFloatType ();
+                assert (ft != nullptr);
+            } else {
+                typenc = ((double) (float) nv.f == nv.f) ? flt32type : flt64type;
+            }
+            asprintf (&name, "(%s)%A", typenc->getName (), nv.f);
             break;
         }
         case NC_SINT: {
-            IntegType *it;
-            if (sizetype->getSign ()) {
-                PtrType *pt = typenc->castPtrType ();
-                if (pt != nullptr) goto goodsint;
+            if (typenc != nullptr) {
+                if (sizetype->getSign ()) {
+                    PtrType *pt = typenc->castPtrType ();
+                    if (pt != nullptr) goto goodsint;
+                }
+                IntegType *it = typenc->castIntegType ();
+                assert (it != nullptr);
+                assert (it->getSign ());
+            } else {
+                typenc = ((int64_t) (int8_t)  nv.s == nv.s) ? int8type  :
+                         ((int64_t) (int16_t) nv.s == nv.s) ? int16type :
+                         ((int64_t) (int32_t) nv.s == nv.s) ? int32type : int64type;
             }
-            it = typenc->castIntegType ();
-            assert (it != nullptr);
-            assert (it->getSign ());
         goodsint:;
             asprintf (&name, "(%s)%lld", typenc->getName (), (long long) nv.s);
             break;
         }
         case NC_UINT: {
-            IntegType *it;
-            if (! sizetype->getSign ()) {
-                PtrType *pt = typenc->castPtrType ();
-                if (pt != nullptr) goto gooduint;
+            if (typenc != nullptr) {
+                if (! sizetype->getSign ()) {
+                    PtrType *pt = typenc->castPtrType ();
+                    if (pt != nullptr) goto gooduint;
+                }
+                IntegType *it = typenc->castIntegType ();
+                assert (it != nullptr);
+                assert (! it->getSign ());
+            } else {
+                typenc = ((uint64_t) (uint8_t)  nv.u == nv.u) ? uint8type  :
+                         ((uint64_t) (uint16_t) nv.u == nv.u) ? uint16type :
+                         ((uint64_t) (uint32_t) nv.u == nv.u) ? uint32type : uint64type;
             }
-            it = typenc->castIntegType ();
-            assert (it != nullptr);
-            assert (! it->getSign ());
         gooduint:;
             asprintf (&name, "(%s)%lluU", typenc->getName (), (unsigned long long) nv.u);
             break;
@@ -220,7 +235,7 @@ NumDecl *NumDecl::createtyped (Token *deftok, Type *type, NumCat nc, NumValue nv
         return nd;
     }
 
-    NumDecl *nd = new NumDecl (name, deftok, type);
+    NumDecl *nd = new NumDecl (name, deftok, typenc->getConstType ());
     nd->numcat = nc;
     nd->numval = nv;
     return nd;

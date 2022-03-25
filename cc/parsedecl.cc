@@ -266,7 +266,10 @@ void Scope::parsedecl (PvEnv pvenv, DeclVec *declvec)
             }
 
             // if global scope, output label and .blkb or .word etc to allocate storage
-            if ((pvenv == PE_GLOBAL) && (storclass != KW_TYPEDEF)) vardecl->allocstaticvar ();
+            if ((pvenv == PE_GLOBAL) && (storclass != KW_TYPEDEF)) {
+                vardecl->allocstaticvar ();
+                vardecl->outputstaticvar ();
+            }
         }
 
         // all done if no ','
@@ -407,7 +410,10 @@ void Scope::parsedecl (PvEnv pvenv, DeclVec *declvec)
             }
 
             // if global scope, output label and .blkb or .word etc to allocate storage
-            if ((pvenv == PE_GLOBAL) && (storclass != KW_TYPEDEF)) vardecl->allocstaticvar ();
+            if ((pvenv == PE_GLOBAL) && (storclass != KW_TYPEDEF)) {
+                vardecl->allocstaticvar ();
+                vardecl->outputstaticvar ();
+            }
         }
     }
 gotdef:;
@@ -2451,11 +2457,59 @@ Expr *Scope::newBinopArith (Token *optok, Opcode opcode, Expr *leftexpr, Expr *r
             return bx;
         }
 
+        // if two integer constants, type might be bigger than either one
+        case OP_MUL: {
+            IntegType *lit = leftexpr->getType ()->stripCVMod ()->castIntegType ();
+            IntegType *rit = riteexpr->getType ()->stripCVMod ()->castIntegType ();
+            if ((lit != nullptr) && (rit != nullptr)) {
+                NumValue lnv, pnv, rnv;
+                NumCat lnc = leftexpr->isNumConstExpr (&lnv);
+                NumCat rnc = riteexpr->isNumConstExpr (&rnv);
+                NumCat pnc = NC_NONE;
+                switch (lnc) {
+                    case NC_SINT: {
+                        switch (rnc) {
+                            case NC_SINT: {
+                                pnc = NC_SINT;
+                                pnv.s = lnv.s * rnv.s;
+                                break;
+                            }
+                            case NC_UINT: {
+                                pnc = NC_UINT;
+                                pnv.u = lnv.s * rnv.u;
+                                break;
+                            }
+                            default: break;
+                        }
+                    }
+                    case NC_UINT: {
+                        switch (rnc) {
+                            case NC_SINT: {
+                                pnc = NC_UINT;
+                                pnv.u = lnv.u * rnv.s;
+                                break;
+                            }
+                            case NC_UINT: {
+                                pnc = NC_UINT;
+                                pnv.u = lnv.u * rnv.u;
+                                break;
+                            }
+                            default: break;
+                        }
+                    }
+                    default: break;
+                }
+                if (pnc != NC_NONE) {
+                    return ValExpr::createnumconst (this, optok, nullptr, pnc, pnv);
+                }
+            }
+            // fall through
+        }
+
         // both operands must be numeric (ints, floats)
         // no auto-casting (except if floatingpoint, then cast to stronger type)
         // result is stronger of the two types
-        case OP_DIV:
-        case OP_MUL: {
+        case OP_DIV: {
             Type *restyp  = getStrongerArith (optok, leftexpr->getType (), riteexpr->getType ());
             if (restyp->stripCVMod ()->castFloatType () != nullptr) {
                 leftexpr = castToType (optok, restyp, leftexpr);
@@ -2508,6 +2562,52 @@ Expr *Scope::newBinopAdd (Token *optok, Expr *leftexpr, Expr *riteexpr)
         return ptrPlusMinusInt (optok, OP_ADD, riteexpr, leftexpr);
     }
 
+    // two integer constants - result might be wider than either one
+    if ((leftinttype != nullptr) && (riteinttype != nullptr)) {
+        NumValue lnv, pnv, rnv;
+        NumCat lnc = leftexpr->isNumConstExpr (&lnv);
+        NumCat rnc = riteexpr->isNumConstExpr (&rnv);
+        NumCat pnc = NC_NONE;
+        switch (lnc) {
+            case NC_SINT: {
+                switch (rnc) {
+                    case NC_SINT: {
+                        pnc = NC_SINT;
+                        pnv.s = lnv.s + rnv.s;
+                        break;
+                    }
+                    case NC_UINT: {
+                        pnc = NC_UINT;
+                        pnv.u = lnv.s + rnv.u;
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            case NC_UINT: {
+                switch (rnc) {
+                    case NC_SINT: {
+                        pnc = NC_UINT;
+                        pnv.u = lnv.u + rnv.s;
+                        break;
+                    }
+                    case NC_UINT: {
+                        pnc = NC_UINT;
+                        pnv.u = lnv.u + rnv.u;
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            default: break;
+        }
+        if (pnc != NC_NONE) {
+            return ValExpr::createnumconst (this, optok, nullptr, pnc, pnv);
+        }
+    }
+
     // must be arithmetics
     // scale weaker type to stronger type
     Type *restype = getStrongerArith (optok, lefttype, ritetype);
@@ -2525,6 +2625,7 @@ Expr *Scope::newBinopSub (Token *optok, Expr *leftexpr, Expr *riteexpr)
 {
     Type *lefttype = leftexpr->getType ()->stripCVMod ();
     Type *ritetype = riteexpr->getType ()->stripCVMod ();
+    IntegType *leftinttype = lefttype->castIntegType ();
     IntegType *riteinttype = ritetype->castIntegType ();
     PtrType   *leftptrtype = lefttype->castPtrType ();
     PtrType   *riteptrtype = ritetype->castPtrType ();
@@ -2537,6 +2638,54 @@ Expr *Scope::newBinopSub (Token *optok, Expr *leftexpr, Expr *riteexpr)
     // pointer - pointer
     if ((leftptrtype != nullptr) && (riteptrtype != nullptr)) {
         return ptrMinusPtr (optok, leftexpr, riteexpr);
+    }
+
+    // two integer constants - result might be wider than either one
+    if ((leftinttype != nullptr) && (riteinttype != nullptr)) {
+        NumValue lnv, pnv, rnv;
+        NumCat lnc = leftexpr->isNumConstExpr (&lnv);
+        NumCat rnc = riteexpr->isNumConstExpr (&rnv);
+        NumCat pnc = NC_NONE;
+        switch (lnc) {
+            case NC_SINT: {
+                switch (rnc) {
+                    case NC_SINT: {
+                        pnc = NC_SINT;
+                        pnv.s = lnv.s - rnv.s;
+                        break;
+                    }
+                    case NC_UINT: {
+                        pnc = NC_UINT;
+                        pnv.u = lnv.s - rnv.u;
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            case NC_UINT: {
+                switch (rnc) {
+                    case NC_SINT: {
+                        fprintf (stderr, "Scope::newBinopSub*: UINT=%llu SINT=%lld\n", (unsigned long long) lnv.u, (long long) rnv.s);
+                        pnc = NC_UINT;
+                        pnv.u = lnv.u - rnv.s;
+                        break;
+                    }
+                    case NC_UINT: {
+                        fprintf (stderr, "Scope::newBinopSub*: UINT=%lld UINT=%llu\n", (unsigned long long) lnv.u, (unsigned long long) rnv.u);
+                        pnc = NC_UINT;
+                        pnv.u = lnv.u - rnv.u;
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            default: break;
+        }
+        if (pnc != NC_NONE) {
+            return ValExpr::createnumconst (this, optok, nullptr, pnc, pnv);
+        }
     }
 
     // must be arithmetics

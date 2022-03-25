@@ -19,9 +19,15 @@
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
 /*
+    make sure library/magicdefs.asm RASPIFLOAT = 0 (optionally RASPIMULDIV = 0)
+    rebuild if changed:
+       rm *.hode.o
+       make
+
+    rm -f x.*
     ln -s fpmptest.c x.c
     make x.hex
-    ./runit.sh x.hex
+    ./runit.sh x.hex 2>&1 | grep 'BAD RESULT'
 */
 
 #include <assert.h>

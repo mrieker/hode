@@ -1,3 +1,0 @@
-#!/bin/bash
-. ./iow56sns.si
-exec ./seqtester.`uname -m` "$@"

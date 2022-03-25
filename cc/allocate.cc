@@ -78,6 +78,7 @@ void Scope::allocscope ()
                     if (this == globalscope) {
                         assert (vardecl->isStaticMem ());
                         vardecl->allocstaticvar ();
+                        vardecl->outputstaticvar ();
                     } else {
                         assert (! vardecl->isStaticMem ());
                         // offset and such gets filled in by optimizer
@@ -91,6 +92,7 @@ void Scope::allocscope ()
                 case KW_STATIC: {
                     assert (vardecl->isStaticMem ());
                     vardecl->allocstaticvar ();
+                    vardecl->outputstaticvar ();
                     break;
                 }
 
@@ -111,11 +113,43 @@ void Scope::allocscope ()
 //   .byte/.word/.long/.quad init value for initialization
 void VarDecl::allocstaticvar ()
 {
+    LabelLocn *labelocn = new LabelLocn ();
+    locn = labelocn;
+
     Keywd storclass = getStorClass ();
     assert ((storclass == KW_EXTERN) || (storclass == KW_NONE) || (storclass == KW_STATIC));
 
-    LabelLocn *labelocn = new LabelLocn ();
-    locn = labelocn;
+    if (getEncType () != nullptr) {
+
+        // static struct member, label is structtype::membername
+        assert (storclass == KW_STATIC);
+        labelocn->label = this->getEncName ();
+    } else if (storclass == KW_STATIC) {
+
+        // static, use unique label in case there is more than one internal static of same name
+        static tsize_t lclseqno = 100;
+        char *buf;
+        asprintf (&buf, "lcl.%u.%s", ++ lclseqno, this->getName ());
+        labelocn->label = buf;
+    } else {
+
+        // extern/global, use given name as they should be unique
+        labelocn->label = this->getName ();
+    }
+}
+
+void VarDecl::outputstaticvar ()
+{
+    Keywd storclass = getStorClass ();
+
+    if (storclass == KW_EXTERN) {
+        if (initexpr != nullptr) {
+            printerror (initexpr->exprtoken, "initialization not allowed on extern variable\n");
+        }
+        return;
+    }
+
+    assert ((storclass == KW_NONE) || (storclass == KW_STATIC));
 
     bool ro = getType ()->isConstType ();
     char const *tn = getType ()->getName ();
@@ -128,45 +162,27 @@ void VarDecl::allocstaticvar ()
     fprintf (sfile, "; -------------- %s%s\n", tn, ar);
     fprintf (sfile, "\t.psect\t%s\n", ro ? TEXTPSECT : DATAPSECT);
 
-    if (getEncType () != nullptr) {
-
-        // static struct member, label is structtype::membername
-        assert (storclass == KW_STATIC);
-        labelocn->label = this->getEncName ();
-        fprintf (sfile, "\t.global\t%s\n", labelocn->label);
-    } else if (storclass == KW_STATIC) {
-
-        // static, use unique label in case there is more than one internal static of same name
-        static tsize_t lclseqno = 100;
-        char *buf;
-        asprintf (&buf, "lcl.%u.%s", ++ lclseqno, this->getName ());
-        labelocn->label = buf;
-    } else {
-
-        // extern/global, use given name as they should be unique
-        labelocn->label = this->getName ();
-        fprintf (sfile, "\t%s\t%s\n", (storclass == KW_EXTERN) ? ".extern" : ".global", labelocn->label);
+    // maybe the label is global
+    // - global if top-level declaration and no qualifier like extern or static
+    // - global if static struct member
+    if ((storclass == KW_NONE) || (getEncType () != nullptr)) {
+        fprintf (sfile, "\t.global\t%s\n", locn->castLabelLocn ()->label);
     }
 
-    if (storclass != KW_EXTERN) {
+    // output alignment and label
+    fprintf (sfile, "\t.align\t%u\n", this->getVarAlign (this->getDefTok ()));
+    fprintf (sfile, "%s:\n", locn->castLabelLocn ()->label);
 
-        // output alignment and label
-        fprintf (sfile, "\t.align\t%u\n", this->getVarAlign (this->getDefTok ()));
-        fprintf (sfile, "%s:\n", labelocn->label);
+    // fill up the storage
+    if (initexpr == nullptr) {
 
-        // set up tabs around name and directive
-        if (initexpr == nullptr) {
+        // no initialization, just reserve a block of zeroes for the size of the var
+        fprintf (sfile, "\t.blkb\t%u\n", this->getValSize (this->getDefTok ()));
+    } else {
 
-            // no initialization, just reserve a block of zeroes for the size of the var
-            fprintf (sfile, "\t.blkb\t%u\n", this->getValSize (this->getDefTok ()));
-        } else {
-
-            // initialization, output static initialization
-            tsize_t initsize = initexpr->outputStaticInit (this->getType ()->stripCVMod ());
-            assert (initsize == getValSize (initexpr->exprtoken));
-        }
-    } else if (initexpr != nullptr) {
-        throwerror (initexpr->exprtoken, "initialization not allowed for extern variables");
+        // initialization, output static initialization
+        tsize_t initsize = initexpr->outputStaticInit (this->getType ()->stripCVMod ());
+        assert (initsize == getValSize (initexpr->exprtoken));
     }
 }
 

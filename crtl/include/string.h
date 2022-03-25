@@ -26,6 +26,7 @@ void memcpy (void *dst, void const *src, __size_t len);
 void memmove (void *dst, void const *src, __size_t len);
 void memset (void *dst, char chr, __size_t len);
 int strcasecmp (char const *a, char const *b);
+int strncasecmp (char const *a, char const *b, __size_t len);
 char *strchr (char const *s, char c);
 int strcmp (char const *a, char const *b);
 void strcpy (char *d, char const *s);

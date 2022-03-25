@@ -1,7 +1,10 @@
 #!/bin/bash -e
 mydir=`dirname $0`
 uname=`uname -m`
+incdir=$mydir/../crtl/include
+first=$1
+shift
 set -x
-gcc -nostdlib -D__HODE__ -E -I../crtl/include $1.c > $1.hode.i
-$mydir/compiler.$uname $1.hode.i -s $1.hode.s > /dev/null
-$mydir/../asm/assemble.$uname $1.hode.s $1.hode.o > $1.lis
+gcc -nostdlib -D__HODE__ -E -I$incdir $first.c "$@" > $first.hode.i
+$mydir/compiler.$uname $first.hode.i -s $first.hode.s > /dev/null
+$mydir/../asm/assemble.$uname $first.hode.s $first.hode.o > $first.lis

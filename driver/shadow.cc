@@ -793,17 +793,6 @@ uint64_t Shadow::getcycles ()
     return __atomic_load_n (&cycle, __ATOMIC_RELAXED);
 }
 
-Shadow::State Shadow::getstate ()
-{
-    return state;
-}
-
-uint16_t Shadow::getreg (uint32_t i)
-{
-    assert (i < 8);
-    return regs[i];
-}
-
 // get what should be on GPIO connector right now, assuming hw has had time to settle in new state
 // assume GPIO connector is turned to connect data pins to ALU output
 // returns what check() is expecting

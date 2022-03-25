@@ -23,6 +23,7 @@
 int getcmdarg (int idx, int len, char *buf);
 int setrosize (__size_t rosize);
 int setstklim (__size_t stklim);
+int setttyecho (int fd, bool echo);
 int printinstr (bool on);
 __uint16_t rdps ();
 __uint16_t wrps (__uint16_t ps);

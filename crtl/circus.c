@@ -515,14 +515,14 @@ static void acanalysis ()
         for (Node *node = matrix->nodelist; node != NULL; node = node->nextnode) {
             if (node->nodenum > 0) {
                 CVal v = matrix->rowslist[node->nodenum-1]->getconstantcolumn ();
-                SVal a = v.ang () * (SVal) (180.0 / M_PI);
+                SVal a = v.arg () * (SVal) (180.0 / M_PI);
                 printf ("    v_%03u  %s = "FMT" + j "FMT" = "FMT" \342\210\240 "FMT"\302\260\n", node->nodenum, node->nodename, v.real, v.imag, v.abs (), a);
             }
         }
         printf ("\n  currents:\n\n");
         for (Branch *branch = matrix->branchlist; branch != NULL; branch = branch->nextbranch) {
             CVal i = matrix->rowslist[matrix->numnodes+branch->branchnum-2]->getconstantcolumn ();
-            SVal a = i.ang () * (SVal) (180.0 / M_PI);
+            SVal a = i.arg () * (SVal) (180.0 / M_PI);
             printf ("    i_%03u  %s = "FMT" + j "FMT" = "FMT" \342\210\240 "FMT"\302\260\n", branch->branchnum, branch->branchname, i.real, i.imag, i.abs (), a);
         }
         printf ("\n");

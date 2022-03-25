@@ -1,8 +1,5 @@
 #!/bin/bash
 cd `dirname $0`
-if ! lsmod | grep -q ^enabtsc
-then
-    sudo insmod km/enabtsc.ko
-fi
+./loadmod.sh
 . ./iow56sns.si
 exec sudo -E ./regtester.`uname -m` "$@"

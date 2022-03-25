@@ -129,7 +129,7 @@ int main (int argc, char **argv)
         // get input signals just before raising clock
         uint32_t sample = gpio->readgpio ();
 
-        if (shadow.getstate () == Shadow::LDA1) {
+        if (shadow.state == Shadow::LDA1) {
             uint16_t data = sample / G_DATA0;
             if (data != lastr3) {
                 printf ("%12llu R%u is %04X sb %04X diff %04X\n",
@@ -154,7 +154,7 @@ int main (int argc, char **argv)
                 switch (stepno) {
                     // LDW R3,2(PC)
                     case 0: {
-                        if (shadow.getstate () != Shadow::FETCH2) abort ();
+                        if (shadow.state != Shadow::FETCH2) abort ();
                         data = 0xC002 | (regnum << REGD) | (7 << REGA);
                         stepno = 1;
                         break;
@@ -163,7 +163,7 @@ int main (int argc, char **argv)
                     //  alternate bit 14
                     //  random for others
                     case 1: {
-                        if (shadow.getstate () != Shadow::LOAD2) abort ();
+                        if (shadow.state != Shadow::LOAD2) abort ();
                         lastr3 ^= bitmsk;
                         lastr3 = data = (randuint16 () & ~ bitmsk) | (lastr3 & bitmsk);
                         stepno = 2;
@@ -171,7 +171,7 @@ int main (int argc, char **argv)
                     }
                     // LDA R2,0(R3)
                     case 2: {
-                        if (shadow.getstate () != Shadow::FETCH2) abort ();
+                        if (shadow.state != Shadow::FETCH2) abort ();
                         data = 0x8000 | ((regnum ^ 1) << REGD) | (regnum << REGA);
                         stepno = 3;
                         break;
@@ -179,7 +179,7 @@ int main (int argc, char **argv)
                     // BR .-4
                     //  keep PC upper bits zeroes
                     case 3: {
-                        if (shadow.getstate () != Shadow::FETCH2) abort ();
+                        if (shadow.state != Shadow::FETCH2) abort ();
                         data = 0x03FB;
                         stepno = 0;
                         break;

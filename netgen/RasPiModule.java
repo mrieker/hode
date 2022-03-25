@@ -17,6 +17,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
+
 /**
  * Built-in RaspberryPi module.
  * It emulates memory and memory-mapped IO devices.
@@ -391,7 +392,7 @@ public class RasPiModule extends Module {
             haltcpunet   =   halt.generate (genctx, 0);    // generate circuitry that drives the HALT signal
 
             // make cells that drive uni-directional PI inputs without putting 5V on the RasPi
-            // they assume the RasPi is programmed with internal pull-ups
+            // the raspi provides 3.3V for the pullups
             PiInCell mreadcell  = new PiInCell (genctx,  "mread." + name, mreadcpunet,  new Network (genctx,  "_mread3V." + name));
             PiInCell mwritecell = new PiInCell (genctx, "mwrite." + name, mwritecpunet, new Network (genctx, "_mwrite3V." + name));
             PiInCell mwordcell  = new PiInCell (genctx,  "mword." + name, mwordcpunet,  new Network (genctx,  "_mword3V." + name));

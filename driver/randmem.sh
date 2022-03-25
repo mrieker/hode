@@ -9,21 +9,19 @@
 cd `dirname $0`
 if [ "$1" == "" ]
 then
-    if ! lsmod | grep -q ^enabtsc
-    then
-        sudo insmod km/enabtsc.ko
-    fi
+    ./loadmod.sh
     nohup ./`basename $0` loop < /dev/null >> randmem.log 2>&1 &
     exit
 fi
 if [ "$1" == "loop" ]
 then
-    for ((cpuhz=470000; $cpuhz != 90000; cpuhz=$cpuhz-10000))
-    do
+    cpuhz=473000
+    ##for ((cpuhz=480000; $cpuhz != 468000; cpuhz=$cpuhz-1000))
+    ##do
         date >> randmem-$cpuhz.log
         ./raspictl.armv7l -randmem -mintimes -cpuhz $cpuhz >> randmem-$cpuhz.log 2>&1
         date >> randmem-$cpuhz.log
         sleep 3
-    done
+    ##done
     exit
 fi

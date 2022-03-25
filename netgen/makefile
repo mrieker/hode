@@ -37,6 +37,7 @@ CLASSFILES = \
 	OldNetFile.class \
 	OpndLhs.class \
 	OpndRhs.class \
+	ParsePCB.class \
 	Placeable.class \
 	PropNode.class \
 	PropPrinter.class \

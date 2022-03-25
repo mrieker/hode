@@ -182,16 +182,13 @@ void FuncDecl::parseFuncBody ()
     if (lastopen != nullptr) fclose (lastopen);
     fflush (sfile);
 
-    // if just output constructor, generate initialization function
+    // if just output constructor, generate initialization and termination functions
     if (strcmp (getName (), "__ctor") == 0) {
         StructType *structtype = getEncType ();
-        if (structtype != nullptr) structtype->genInitFunc ();
-    }
-
-    // likewise with destructor and termination function
-    if (strcmp (getName (), "__dtor") == 0) {
-        StructType *structtype = getEncType ();
-        if (structtype != nullptr) structtype->genTermFunc ();
+        if (structtype != nullptr) {
+            structtype->genInitFunc ();
+            structtype->genTermFunc ();
+        }
     }
 }
 
@@ -275,9 +272,9 @@ Stmt *FuncDecl::parseStatement (Scope *scope, SwitchStmt *outerswitch)
             // get pointer expression
             Expr *mempointer = scope->parsexpression (false, false);
             Type *exptype = mempointer->getType ();
-            PtrType *ptrtype = exptype->castPtrType ();
+            PtrType *ptrtype = exptype->stripCVMod ()->castPtrType ();
             if (ptrtype == nullptr) {
-                throwerror (mempointer->exprtoken, "pointer expression required");
+                throwerror (mempointer->exprtoken, "pointer expression required, not '%s'", exptype->getName ());
             }
             Type *basetype = ptrtype->getBaseType ();
 

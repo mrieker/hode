@@ -1148,6 +1148,7 @@ void TryBegPrim::assemprim (MachFile *mf)
     if (trystackvar == nullptr) {
         trystackvar = new VarDecl ("__trystack", globalscope, intdeftok, trymarktype->getPtrType (), KW_EXTERN);
         trystackvar->allocstaticvar ();
+        trystackvar->outputstaticvar ();
     }
 
     // make sure all caught typeids have been output to sfile

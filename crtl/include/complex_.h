@@ -32,10 +32,21 @@ struct CType {
     CType neg ();
     CType rec ();
     CData abs ();
-    CData ang ();
+    CData arg ();
 
     void addeq (CType x);
     void subeq (CType x);
     void muleq (CType x);
     void diveq (CType x);
+
+    CType pow (CType x);
+    CType acos ();
+    CType asin ();
+    CType atan ();
+    CType cos ();
+    CType exp ();
+    CType log ();
+    CType sin ();
+    CType sqrt ();
+    CType tan ();
 };

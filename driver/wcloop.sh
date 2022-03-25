@@ -1,4 +1,5 @@
 #!/bin/bash
+./loadmod.sh
 cpuhz=75000
 date > wcloop.log
 echo $cpuhz >> wcloop.log

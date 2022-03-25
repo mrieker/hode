@@ -17,6 +17,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
+
 /**
  * Program runs on the raspberry pi to control the computer.
  *
@@ -38,6 +39,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <map>
 #include <math.h>
 #include <pthread.h>
 #include <sched.h>
@@ -46,6 +48,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -90,6 +93,8 @@
 #define SCN_NEG_DD 28
 #define SCN_NEG_FF 29
 #define SCN_WATCHWRITE 30
+#define SCN_GETENV 31
+#define SCN_SETTTYECHO 32
 
 #define IRQ_SCNINTREQ 0x1
 #define IRQ_LINECLOCK 0x2
@@ -108,6 +113,7 @@ static pthread_cond_t intreqcond = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t lineclockcond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t intreqlock = PTHREAD_MUTEX_INITIALIZER;
 static Shadow shadow;
+static std::map<int,struct termios> savedtermioss;
 static struct timespec lineclockabs;
 static uint16_t readonlysize;
 static uint16_t stacklimit;
@@ -144,6 +150,7 @@ static void writememflt  (uint32_t addr, float    val);
 static void *getmemptr (uint32_t addr, uint32_t size, bool write);
 static char const *getmemstr (uint32_t addr);
 static void shadowcheck (uint32_t sample);
+static void restorestdinattrs ();
 
 int main (int argc, char **argv)
 {
@@ -333,7 +340,13 @@ int main (int argc, char **argv)
 
         // raise clock then wait for half a cycle
         SHADOWCHECK (sample);
-        gpio->writegpio (false, G_CLK | syncintreq);
+        if (shadow.state == Shadow::FETCH2) {
+            // keep IR LEDs steady with old opcode instead of turning all on
+            // cosmetic only, otherwise can use the else's writegpio()
+            gpio->writegpio (true, G_CLK | syncintreq | shadow.ir * G_DATA0);
+        } else {
+            gpio->writegpio (false, G_CLK | syncintreq);
+        }
         gpio->halfcycle ();
 
         // process the signal sample from just before raising clock
@@ -348,7 +361,7 @@ int main (int argc, char **argv)
             uint32_t mi = addr / 2 - MAGIC / 2;
 
             if (addr == stopataddr) {
-                fprintf (stderr, "raspictl: stopat %04X; PC %04X\n", addr, shadow.getreg (7));
+                fprintf (stderr, "raspictl: stopat %04X; PC %04X\n", addr, shadow.regs[7]);
                 return 2;
             }
 
@@ -359,7 +372,7 @@ int main (int argc, char **argv)
                 if (randmem) {
                     if ((randinit > 0) && (-- randinit & 1)) {
                         data = 0xC000 | ((randinit - 1) << (REGD - 1)) | (7 << REGA);
-                    } else if (shadow.getstate () == Shadow::FETCH2) {
+                    } else if (shadow.state == Shadow::FETCH2) {
                         data = randopcode ();
                     } else {
                         data = randuint16 ();
@@ -403,8 +416,8 @@ int main (int argc, char **argv)
             }
         }
 
-        if (shadow.getreg (6) < stacklimit) {
-            fprintf (stderr, "raspictl: stack pointer %04X below limit %04X\n", shadow.getreg (6), stacklimit);
+        if (shadow.regs[6] < stacklimit) {
+            fprintf (stderr, "raspictl: stack pointer %04X below limit %04X\n", shadow.regs[6], stacklimit);
             dumpregs ();
             abort ();
         }
@@ -490,8 +503,8 @@ static uint16_t randuint16 ()
 static void dumpregs ()
 {
     fprintf (stderr, "raspictl:  R0=%04X R1=%04X R2=%04X R3=%04X R4=%04X R5=%04X R6=%04X PC=%04X\n",
-            shadow.getreg (0), shadow.getreg (1), shadow.getreg (2), shadow.getreg (3),
-            shadow.getreg (4), shadow.getreg (5), shadow.getreg (6), shadow.getreg (7));
+            shadow.regs[0], shadow.regs[1], shadow.regs[2], shadow.regs[3],
+            shadow.regs[4], shadow.regs[5], shadow.regs[6], shadow.regs[7]);
 }
 
 // CPU wrote to syscall magic location
@@ -546,6 +559,7 @@ static void mw_syscall (uint32_t sample, uint16_t data)
             int rc = close (fd);
             if (rc < 0) save_errno ();
             mr_syscall_rc = rc;
+            savedtermioss.erase (fd);
             break;
         }
 
@@ -862,6 +876,60 @@ static void mw_syscall (uint32_t sample, uint16_t data)
             break;
         }
 
+        //  .word   SCN_GETENV
+        //  .word   bufaddr
+        //  .word   bufsize
+        //  .word   nameaddr
+        // returns 0 if not found, or len incl null
+        case SCN_GETENV: {
+            mr_syscall_rc = 0;
+            char const *name = getmemstr (readmemword (data + 6));
+            char *envstr = getenv (name);
+            if (envstr != NULL) {
+                uint16_t envlen = strlen (envstr) + 1;
+                mr_syscall_rc = envlen;
+                uint16_t bufsize = readmemword (data + 4);
+                if (bufsize > 0) {
+                    if (envlen > bufsize) envlen = bufsize;
+                    void *bufaddr = getmemptr (readmemword (data + 2), envlen, true);
+                    memcpy (bufaddr, envstr, envlen);
+                }
+            }
+            break;
+        }
+
+        //  .word   SCN_SETTTYECHO
+        //  .word   fd
+        //  .word   0 : disable echo
+        //          1 : enable echo
+        case SCN_SETTTYECHO: {
+            struct termios ttyattrs;
+            int  fd = (int)(sint16_t) readmemword (data + 2);
+            bool echo = readmemword (data + 4) != 0;
+            if (savedtermioss.count (fd) == 0) {
+                if (tcgetattr (fd, &ttyattrs) < 0) {
+                    mr_syscall_rc = -1;
+                    save_errno ();
+                    break;
+                }
+                savedtermioss[fd] = ttyattrs;
+                if (fd == 0) atexit (restorestdinattrs);
+            } else {
+                ttyattrs = savedtermioss[fd];
+            }
+            if (! echo) {
+                cfmakeraw (&ttyattrs);
+                ttyattrs.c_oflag |= OPOST;
+            }
+            if (tcsetattr (fd, TCSANOW, &ttyattrs) < 0) {
+                mr_syscall_rc = -2;
+                save_errno ();
+                break;
+            }
+            mr_syscall_rc = 0;
+            break;
+        }
+
         default: {
             mr_syscall_rc = -1;
             errno = -ENOSYS;
@@ -1116,7 +1184,7 @@ static char const *getmemstr (uint32_t addr)
     for (size = 0; addr + size < MAGIC; size ++) {
         if (memory[addr+size] == 0) return (char const *) (memory + addr);
     }
-    fprintf (stderr, "raspictl: bad getmemstr %08X at PC=%04X\n", addr, shadow.getreg (7));
+    fprintf (stderr, "raspictl: bad getmemstr %08X at PC=%04X\n", addr, shadow.regs[7]);
     abort ();
 }
 
@@ -1134,4 +1202,12 @@ static void shadowcheck (uint32_t sample)
     uint16_t mq = sample / G_DATA0;
     bool irq = (sample & G_IRQ) != 0;
     if (shadow.clock (mq, irq)) abort ();
+}
+
+// terminated, maybe turn stdin echo back on
+static void restorestdinattrs ()
+{
+    if (savedtermioss.count (0) != 0) {
+        tcsetattr (0, TCSANOW, &savedtermioss[0]);
+    }
 }

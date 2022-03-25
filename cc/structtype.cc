@@ -17,6 +17,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
+
 /////////////////////
 //  struct layout  //
 /////////////////////
@@ -416,7 +417,7 @@ Expr *StructType::callTermFunc (Scope *scope, Token *token, Expr *mempointer)
 tsize_t StructType::getTypeAlign (Token *errtok)
 {
     if (variables == nullptr) {
-        printerror (errtok, "struct/union '%s' contents undefined", getName ());
+        if (errtok != nullptr) printerror (errtok, "struct/union '%s' contents undefined", getName ());
         return 1;
     }
 
@@ -439,7 +440,7 @@ tsize_t StructType::getTypeAlign (Token *errtok)
 tsize_t StructType::getTypeSize (Token *errtok)
 {
     if (variables == nullptr) {
-        printerror (errtok, "struct/union '%s' contents undefined", getName ());
+        if (errtok != nullptr) printerror (errtok, "struct/union '%s' contents undefined", getName ());
         return 1;
     }
 
@@ -477,6 +478,8 @@ tsize_t StructType::getTypeSize (Token *errtok)
 // excludes functions
 tsize_t StructType::getNumMembers ()
 {
+    if (variables == nullptr) return 0;
+
     tsize_t index = variables->size ();
 
     for (StructType *exttype : exttypes) {
@@ -512,6 +515,8 @@ tsize_t StructType::getMemberOffset (Token *errtok, char const *name)
 //                                   *memindex_r  = index of variable member within 'this' struct
 bool StructType::getMemberByName (Token *errtok, char const *name, StructType **memstruct_r, FuncDecl **memfuncdecl_r, VarDecl **memvardecl_r, tsize_t *memoffset_r, tsize_t *memindex_r)
 {
+    if (functions == nullptr) return false;
+
     tsize_t index  = 0;
     tsize_t offset = 0;
 
@@ -616,6 +621,8 @@ bool StructType::getMemberByIndex (Token *errtok, tsize_t index, StructType **me
 // do not check inheriteds
 bool StructType::hasVirtFunc (char const *name)
 {
+    if (functions == nullptr) return false;
+
     for (FuncDecl *f : *functions) {
         if (strcmp (f->getName (), name) == 0) {
             return f->getStorClass () == KW_VIRTUAL;
@@ -705,6 +712,8 @@ char *StructType::getVTableVarName ()
 //   returns vtindex just past last entry filled in
 tsize_t StructType::fillvtableinit (tsize_t vtindex, StructInitExpr *vtinitexpr)
 {
+    if (functions == nullptr) return vtindex;
+
     Scope *scope = getScope ();
     Token *token = getDefTok ();
 
@@ -887,6 +896,20 @@ void StructType::genInitFunc ()
     pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OBRACE));
 
     initfuncdecl->parseFuncBody ();
+
+    // also output the vtable contents if any
+    // all structs that have vtables always have __init() functions to fill in the vtable pointer
+    // don't output if abstract functions cuz it will never be used and would have null function pointers
+    if (vtabletype != nullptr) {
+        for (FuncDecl *f : *functions) {
+            if (f->purevirt) goto isabstract;
+        }
+        {
+            VarDecl *vtv = this->getVTableVarDecl ();
+            vtv->outputstaticvar ();
+        }
+    isabstract:;
+    }
 }
 
 // see if there is a vtable entry for a struct

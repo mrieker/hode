@@ -81,7 +81,9 @@ Prim *UnopExpr::generexpr (Prim *prevprim, ValDecl **exprval_r)
             // make a dereferenced pointer value
             ValDecl *subvaldecl;
             prevprim = subexpr->generexpr (prevprim, &subvaldecl);
-            *exprval_r = new PtrDecl (exprscope, exprtoken, subvaldecl);
+            if (exprval_r != nullptr) {
+                *exprval_r = new PtrDecl (exprscope, exprtoken, subvaldecl);
+            }
             return prevprim;
         }
 

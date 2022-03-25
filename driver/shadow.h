@@ -36,15 +36,18 @@ struct Shadow {
     bool printinstr;
     bool printstate;
 
+    State state;
+    uint16_t ir;
+    uint16_t regs[8];
+    uint16_t psw;
+
     Shadow ();
     void open (GpioLib *gpiolib);
     void reset ();
     bool check (uint32_t sample);
     bool clock (uint16_t mq, bool irq);
     uint64_t getcycles ();
-    State getstate ();
     uint32_t readgpio ();
-    uint16_t getreg (uint32_t i);
 
 private:
     bool fatal;
@@ -52,12 +55,8 @@ private:
     int rawcmid;
     int rawcout;
     int rawvout;
-    State state;
     uint16_t alu;
-    uint16_t ir;
     uint16_t newpsw;
-    uint16_t psw;
-    uint16_t regs[8];
     uint64_t cycle;
 
     State endOfInst (bool irq);

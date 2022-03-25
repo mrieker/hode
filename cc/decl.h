@@ -261,6 +261,7 @@ struct VarDecl : ValDecl {
     void setInitExpr (Expr *initexpr) { this->initexpr = initexpr; }
     Expr *getInitExpr () { return this->initexpr; }
     void allocstaticvar ();
+    void outputstaticvar ();
 
     virtual VarDecl *castVarDecl () { return this; }
 

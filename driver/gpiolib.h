@@ -30,7 +30,7 @@
 
 struct Shadow;
 
-#define DEFCPUHZ 470000
+#define DEFCPUHZ 473000
 
 #define G_CLK         0x4   // GPIO[02]   out: send clock signal to cpu
 #define G_RESET       0x8   // GPIO[03]   out: send reset signal to cpu
