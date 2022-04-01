@@ -169,6 +169,28 @@ foundbootsym:;
         dolinkerpass ();
     } while (repeatpass2);
 
+    // assign addresses to psects
+    for (lobjfile = &objfiles; (objfile = *lobjfile) != NULL;) {
+        if (objfile->ifrefd) {
+            // object module not referenced, get rid of it
+            *lobjfile = objfile->next;
+        } else {
+            // referenced, go through all psects therein
+            for (objpsect = objfile->psects; objpsect != NULL; objpsect = objpsect->next) {
+                allpsect = objpsect->allpsect;
+                if (allpsect->alin < objpsect->alin) allpsect->alin = objpsect->alin;
+                if (allpsect->pflg & PF_OVR) {
+                    objpsect->base = 0;
+                    if (allpsect->size < objpsect->size) allpsect->size = objpsect->size;
+                } else {
+                    objpsect->base = (allpsect->size + objpsect->alin - 1) & - objpsect->alin;
+                    allpsect->size = objpsect->base + objpsect->size;
+                }
+            }
+            lobjfile = &objfile->next;
+        }
+    }
+
     // place psects in alphabetical order and print map to stdout
     // assign psects in alpabetical order
     int npsects = 0;
@@ -341,17 +363,7 @@ static void processobjline (Objfile *objfile, char *objline)
                 objpsect->allpsect = allpsect;
                 strcpy (objpsect->name, psectname);
                 objfile->psects = objpsect;
-                if (allpsect->alin < objpsect->alin) allpsect->alin = objpsect->alin;
                 allpsect->pflg |= objpsect->pflg;
-
-                // accumulate psect size for this psect in all object files
-                if (allpsect->pflg & PF_OVR) {
-                    objpsect->base = 0;
-                    if (allpsect->size < objpsect->size) allpsect->size = objpsect->size;
-                } else {
-                    objpsect->base = (allpsect->size + objpsect->alin - 1) & - objpsect->alin;
-                    allpsect->size = objpsect->base + objpsect->size;
-                }
             }
             break;
         }
@@ -461,6 +473,8 @@ static char *parsevaluestring (char *str, Objfile *objfile, uint16_t *value_r, P
                         if (symbol->defobjfile->ifrefd) {
                             symbol->defobjfile->ifrefd = 0;
                             repeatpass2 = 1;
+                            printf ("symbol %s referenced by %s causes %s to be included\n",
+                                    symbol->name, objfile->name, symbol->defobjfile->name);
                         }
                         goto symbolfound;
                     }

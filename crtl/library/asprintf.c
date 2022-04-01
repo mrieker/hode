@@ -25,12 +25,12 @@
 #include "fdfile.h"
 
 struct MALFILE : FILE {
-    virtual int fput (char const *buf, int len);
+    virtual int put (char const *buf, int len);
 };
 
 MALFILE::MALFILE ();
 
-int MALFILE::fput (char const *buf, int len)
+int MALFILE::put (char const *buf, int len)
 {
     if (len > 0) {
         if (this->wused + len >= this->wsize) {

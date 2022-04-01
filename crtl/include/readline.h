@@ -27,6 +27,7 @@ struct ReadLine {
     int open (int fd);
     void close ();
     char *read (char const *prompt);
+    void save (char *linebuff);
 
     char **histlines;
     int fd;

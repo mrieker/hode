@@ -49,23 +49,14 @@
 /*                                                                      */
 /*    Input:                                                            */
 /*                                                                      */
-/*      entry  = routine to call with output data                       */
-/*      param  = parameter to pass to 'entry' routine                   */
-/*      size   = size of 'buff'                                         */
-/*      buff   = address of temporary buffer                            */
+/*      stream->put() = write output                                    */
 /*      format = pointer to null terminated format string               */
 /*      ap     = conversion argument list pointer                       */
 /*                                                                      */
 /*    Output:                                                           */
 /*                                                                      */
-/*      returns < 0: as returned by 'entry'                             */
+/*      returns < 0: as returned by stream->put()                       */
 /*             else: number of chars written to output                  */
-/*                                                                      */
-/*    Note:                                                             */
-/*                                                                      */
-/*      'entry' routine is called whenever the buff fills.  If it       */
-/*      wants, it can alter the size and address of the buffer before   */
-/*      it returns.                                                     */
 /*                                                                      */
 /************************************************************************/
 
@@ -342,7 +333,7 @@ int putfc (Par *p, int s, char c)
     p -> numout   += s;                                                         // this much more will have been output
     p -> minwidth -= s;                                                         // this fewer chars needed to fill output field minimum width
     do {
-      sts = p -> stream -> fputc (c);
+      sts = p -> stream -> put (&c, 1);
       if (sts < 0) return sts;
     } while (-- s > 0);
   }
@@ -357,7 +348,7 @@ int putst (Par *p, int s, char const *b)
   if (s > 0) {
     p -> numout   += s;                                                         // this much more will have been output
     p -> minwidth -= s;                                                         // this fewer chars needed to fill output field minimum width
-    int sts = p -> stream -> fput (b, s);
+    int sts = p -> stream -> put (b, s);
     if (sts < 0) return sts;
   }
 
@@ -370,7 +361,7 @@ int putch (Par *p, char c)
 {
   p -> numout ++;                                                               // one more char has been output
   p -> minwidth --;                                                             // one less char needed to fill output field minimum width
-  return p -> stream -> fput (&c, 1);
+  return p -> stream -> put (&c, 1);
 }
 
 /* Get unsigned short/long/int into 'unum' */

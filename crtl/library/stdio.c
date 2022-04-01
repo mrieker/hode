@@ -40,6 +40,7 @@ FILE *fopen (char const *path, char const *mode)
 {
     int flags = 0;
 
+    if (mode[0] == 'a') flags = O_APPEND | O_CREAT | O_WRONLY;
     if (mode[0] == 'r') flags = O_RDONLY;
     if (mode[0] == 'w') flags = O_CREAT | O_WRONLY | O_TRUNC;
 
@@ -53,29 +54,4 @@ int fclose (FILE *stream)
     int rc = stream->fclose ();
     stream->free ();
     return rc;
-}
-
-int fgetc (FILE *stream)
-{
-    return stream->fgetc ();
-}
-
-char *fgets (char *buf, int size, FILE *stream)
-{
-    return stream->fgets (buf, size);
-}
-
-int fputc (int chr, FILE *stream)
-{
-    return stream->fputc (chr);
-}
-
-int fputs (char const *buf, FILE *stream)
-{
-    return stream->fputs (buf);
-}
-
-int fflush (FILE *stream)
-{
-    return stream->fflush ();
 }

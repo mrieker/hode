@@ -34,7 +34,10 @@ jacl141
 jaclBinary141.zip
 kicad
 raspictl.readcounts
+!goodpcbs/*.net
 !goodpcbs/*.pcb
+!goodpcbs/*.png
+!goodpcbs/*.rep
 !iowarrior/makefile
 !kicads/IOW56Paddle/IOW56Paddle.kicad_pcb
 !kicads/IOW56Paddle/IOW56Paddle.pro

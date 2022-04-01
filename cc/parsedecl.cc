@@ -1514,10 +1514,20 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                         throwerror (stackedtok, "colon without matching question mark");
                     }
                     opstack.pop_back ();
+                    Expr *falsex = exstack_pop_back ();
+                    Expr *trueex = exstack_pop_back ();
+                    Expr *condex = exstack_pop_back ();
+                    Type *truetype = trueex->getType ()->stripCVMod ();
+                    Type *falstype = falsex->getType ()->stripCVMod ();
+                    if ((truetype->castNumType () != nullptr) && (falstype->castNumType () != nullptr)) {
+                        Type *restype = getStrongerArith (stackedtok, truetype, falstype);
+                        trueex = castToType (stackedtok, restype, trueex);
+                        falsex = castToType (stackedtok, restype, falsex);
+                    }
                     QMarkExpr *qx = new QMarkExpr (this, stackedtok);
-                    qx->falsexpr  = exstack_pop_back ();
-                    qx->trueexpr  = exstack_pop_back ();
-                    qx->condexpr  = exstack_pop_back ();
+                    qx->falsexpr  = falsex;
+                    qx->trueexpr  = trueex;
+                    qx->condexpr  = condex;
                     exstack.push_back (qx);
                     break;
                 }
@@ -2666,13 +2676,11 @@ Expr *Scope::newBinopSub (Token *optok, Expr *leftexpr, Expr *riteexpr)
             case NC_UINT: {
                 switch (rnc) {
                     case NC_SINT: {
-                        fprintf (stderr, "Scope::newBinopSub*: UINT=%llu SINT=%lld\n", (unsigned long long) lnv.u, (long long) rnv.s);
                         pnc = NC_UINT;
                         pnv.u = lnv.u - rnv.s;
                         break;
                     }
                     case NC_UINT: {
-                        fprintf (stderr, "Scope::newBinopSub*: UINT=%lld UINT=%llu\n", (unsigned long long) lnv.u, (unsigned long long) rnv.u);
                         pnc = NC_UINT;
                         pnv.u = lnv.u - rnv.u;
                         break;

@@ -19,7 +19,7 @@
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
 // Parse a KiCad PCB file
-// Print out network names and component references, values, positions, connections
+// Print out component references, values, positions, connections
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -79,15 +79,16 @@ public class ParsePCB {
         }
 
         // print networks
-        for (Integer netnum : netnames.keySet ()) {
-            String netname = netnames.get (netnum);
-            if (! netname.startsWith ("\"")) netname = '"' + netname + '"';
-            System.out.println (String.format ("net:%05d  %s", netnum, netname));
-        }
+        // freepcb renumbers nets but names stay the same
+        ////for (Integer netnum : netnames.keySet ()) {
+        ////    String netname = netnames.get (netnum);
+        ////    if (! netname.startsWith ("\"")) netname = '"' + netname + '"';
+        ////    System.out.println (String.format ("net:%05d  %s", netnum, netname));
+        ////}
 
         // print components
         for (String refer : compons.keySet ()) {
-            compons.get (refer).print ();
+            compons.get (refer).print (netnames);
         }
     }
 
@@ -317,11 +318,20 @@ public class ParsePCB {
             }
         }
 
-        public void print ()
+        public void print (TreeMap<Integer,String> netnames)
         {
             System.out.print (String.format ("compon:%-6s  value=%-8s  at=%05d,%05d", refer, value, atx100, aty100));
             for (int idx = 0; idx < padnets.length; idx ++) {
-                if (padnets[idx] >= 0) System.out.print (String.format ("  pin.%d=%05d", idx, padnets[idx]));
+                int netnum = padnets[idx];
+                if (netnum >= 0) {
+                    String netname = netnames.get (netnum);
+                    if (netname == null) netname = Integer.toString (netnum);
+                    else {
+                        if (! netname.startsWith ("\"")) netname = "\"" + netname;
+                        if (! netname.endsWith ("\""))   netname = netname + "\"";
+                    }
+                    System.out.print (String.format ("  pin.%d=%s", idx, netname));
+                }
             }
             System.out.println ("");
         }

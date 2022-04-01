@@ -919,7 +919,10 @@ static void mw_syscall (uint32_t sample, uint16_t data)
             }
             if (! echo) {
                 cfmakeraw (&ttyattrs);
-                ttyattrs.c_oflag |= OPOST;
+                ttyattrs.c_oflag |= OPOST;      // still insert CR before LF on output
+                if (fd == 0) {
+                    ttyattrs.c_lflag |= ISIG;   // still handle ^C, ^Z
+                }
             }
             if (tcsetattr (fd, TCSANOW, &ttyattrs) < 0) {
                 mr_syscall_rc = -2;

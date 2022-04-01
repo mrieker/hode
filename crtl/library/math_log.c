@@ -20,12 +20,13 @@
 
 MType MMath(log) (MType x)
 {
-    if (x < 0.0) return MNAN;
+    if (MMath (isnan) (x) || (x < 0.0)) return MNAN;
+    if (MMath (isinf) (x)) return MINF;
     if (x == 0.0) return - MINF;
-
-    bool neg = x > 1.0;
-    if (neg) x = 1.0 / x;
     if (x == 1.0) return 0.0;
+
+    int exp;
+    x = MMath (frexp) (x, &exp);
 
     MType u  = x - 1.0;
     MType mu = - u;
@@ -36,9 +37,8 @@ MType MMath(log) (MType x)
     while (1) {
         u *= mu;
         y += u / ++ d;
-        if ((y == y1) || (y == y2)) return neg ? - y : y;
+        if ((y == y1) || (y == y2)) return y + exp / (MType) M_LOG2E;
         y2 = y1;
         y1 = y;
     }
 }
-

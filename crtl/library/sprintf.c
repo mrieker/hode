@@ -25,14 +25,16 @@
 #include "fdfile.h"
 
 struct BUFFILE : FILE {
-    virtual int fput (char const *buf, int len);
+    int total;
+    virtual int put (char const *buf, int len);
 };
 
 BUFFILE::BUFFILE ();
 
-int BUFFILE::fput (char const *buf, int len)
+int BUFFILE::put (char const *buf, int len)
 {
     if (len > 0) {
+        this->total += len;
         int room = this->wsize - this->wused;
         if (room > len) room = len;
         memcpy (this->wbuff + this->wused, buf, room);
@@ -61,18 +63,21 @@ int snprintf (char *buf, int len, char const *fmt, ...)
 
 int vsprintf (char *buf, char const *fmt, va_list ap)
 {
-    return vsnprintf (buf, 0x7FFF, fmt, ap);
+    return vsnprintf (buf, (buf == NULL) ? 0 : 0x7FFF, fmt, ap);
 }
 
 int vsnprintf (char *buf, int len, char const *fmt, va_list ap)
 {
-    if (-- len < 0) return -1;
     BUFFILE stream;
     stream.wbuff = buf;
     stream.wsize = len;
+    stream.total = 0;
     int rc = vfprintf (&stream, fmt, ap);
-    if (rc > len) buf[len] = 0;
-    else if (rc >= 0) buf[rc] = 0;
-    else buf[0] = 0;
+    if (rc >= 0) rc = stream.total;
+    if (-- len >= 0) {
+        if (rc > len) buf[len] = 0;
+        else if (rc >= 0) buf[rc] = 0;
+        else buf[0] = 0;
+    }
     return rc;
 }

@@ -47,11 +47,9 @@ CType CType::sub (CType x)
 //  (t.real + j * t.imag) * (x.real + j * x.imag) = (t.real * x.real - t.imag * x.imag) + j * (t.real * x.imag + t.imag * x.real)
 CType CType::mul (CType x)
 {
-    CData r = this->real * x.real - this->imag * x.imag;
-    CData i = this->real * x.imag + this->imag * x.real;
     CType y;
-    y.real = r;
-    y.imag = i;
+    y.real = this->real * x.real - this->imag * x.imag;
+    y.imag = this->real * x.imag + this->imag * x.real;
     return y;
 }
 
@@ -73,6 +71,22 @@ CType CType::par (CType x)
     CType n = this->mul (x);
     CType d = this->add (x);
     return n.div (d);
+}
+
+CType CType::mulr (CData x)
+{
+    CType y;
+    y.real = this->real * x;
+    y.imag = this->imag * x;
+    return y;
+}
+
+CType CType::divr (CData x)
+{
+    CType y;
+    y.real = this->real / x;
+    y.imag = this->imag / x;
+    return y;
 }
 
 CType CType::neg ()
@@ -103,6 +117,14 @@ CData CType::abs ()
 CData CType::arg ()
 {
     return CMath (atan2) (this->imag, this->real);
+}
+
+CType CType::sq ()
+{
+    CType y;
+    y.real = this->real * this->real - this->imag * this->imag;
+    y.imag = this->real * this->imag * 2;
+    return y;
 }
 
 void CType::addeq (CType x)
@@ -141,7 +163,8 @@ void CType::diveq (CType x)
 CType CType::pow (CType x)
 {
     if ((x.imag == 0) && (this->imag == 0)) {
-        return CType::make (CMath (pow) (this->real, x.real), 0);
+        CData r = CMath (pow) (this->real, x.real);
+        if (! CMath (isnan) (r)) return CType::make (r, 0);
     }
 
     CData lnr = CMath (log) (this->abs ());
@@ -157,6 +180,10 @@ CType CType::pow (CType x)
 //         =   - i * ln (z + i * sqrt (abs (1 - z**2)) * (e ** i/2*arg(1-z**2)))
 CType CType::acos ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (acos) (this->real), 0);
+    }
+
     CType epow, expon, isqrtepow, one_zsq, zsq;
     zsq.real = this->real * this->real - this->imag * this->imag;
     zsq.imag = this->real * this->imag * 2;
@@ -177,6 +204,10 @@ CType CType::acos ()
 //  asin z = pi/2 - acos z
 CType CType::asin ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (asin) (this->real), 0);
+    }
+
     CType acosz = this->acos ();
     CType asinz;
     asinz.real = ((CData)M_PI_2) - acosz.real;
@@ -189,6 +220,10 @@ CType CType::asin ()
 //         = -0.5 i * ln ((i - z) / (i + z))
 CType CType::atan ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (atan) (this->real), 0);
+    }
+
     CType num, den, log;
     num.real = 0 - this->real;
     num.imag = 1 - this->imag;
@@ -202,6 +237,10 @@ CType CType::atan ()
 //  cos z = (e**iz + e**-iz) / 2
 CType CType::cos ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (cos) (this->real), 0);
+    }
+
     CType iz     = CType::make (- this->imag, this->real);
     CType e__iz  = iz.exp ();
     CType e___iz = e__iz.rec ();
@@ -214,6 +253,9 @@ CType CType::cos ()
 CType CType::exp ()
 {
     CData e__x = CMath (exp) (this->real);
+    if (this->imag == 0) {
+        return CType::make (e__x, 0);
+    }
     return CType::make (e__x * CMath (cos) (this->imag), e__x * CMath (sin) (this->imag));
 }
 
@@ -228,6 +270,10 @@ CType CType::log ()
 //  sin z = (e**iz - e**-iz) / 2i = -0.5 i (e**iz - e**-iz)
 CType CType::sin ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (sin) (this->real), 0);
+    }
+
     CType iz     = CType::make (- this->imag, this->real);
     CType e__iz  = iz.exp ();
     CType e___iz = e__iz.rec ();
@@ -251,6 +297,10 @@ CType CType::sqrt ()
 //                       = -i (e**iz - e**-iz) / (e**iz + e**-iz)
 CType CType::tan ()
 {
+    if (this->imag == 0) {
+        return CType::make (CMath (tan) (this->real), 0);
+    }
+
     CType iz     = CType::make (- this->imag, this->real);
     CType e__iz  = iz.exp ();
     CType e___iz = e__iz.rec ();

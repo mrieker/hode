@@ -18,6 +18,7 @@
 //
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
+#include <assert.h>
 #include <errno.h>
 #include <hode.h>
 #include <readline.h>
@@ -62,10 +63,6 @@ void ReadLine::close ()
 char *ReadLine::read (char const *prompt)
 {
     int histindex = this->histcount;
-    if (histindex >= this->histalloc) {
-        this->histalloc += this->histalloc / 2;
-        this->histlines  = realloc (this->histlines, this->histalloc * sizeof *this->histlines);
-    }
 
     char *linebuff = malloc (64);
     linebuff[0]  = 0;
@@ -89,6 +86,7 @@ char *ReadLine::read (char const *prompt)
             }
 
             // backup one char
+            lfarrow:
             case 'B'-'@': {
                 if (lineposn > 0) {
                     this->writebks (1);
@@ -113,6 +111,7 @@ char *ReadLine::read (char const *prompt)
             }
 
             // forward one char
+            rtarrow:
             case 'F'-'@': {
                 if (lineposn < lineused) {
                     this->writeall (linebuff + lineposn, 1);
@@ -125,12 +124,15 @@ char *ReadLine::read (char const *prompt)
             case 'J'-'@':
             case 'M'-'@': {
                 this->writeall ("\r\n", 2);
+
+                assert (lineused < allocsz (linebuff));
                 linebuff[lineused] = 0;
-                this->histlines[this->histcount++] = linebuff;
+                linebuff = realloc (linebuff, lineused + 1);
                 return linebuff;
             }
 
             // next line in history
+            dnarrow:
             case 'N'-'@': {
                 if (histindex < this->histcount) {
                     lineposn = lineused = this->newhistline (++ histindex, &linebuff, lineposn, lineused);
@@ -139,6 +141,7 @@ char *ReadLine::read (char const *prompt)
             }
 
             // previous line in history
+            uparrow:
             case 'P'-'@': {
                 if (histindex > 0) {
                     lineposn = lineused = this->newhistline (-- histindex, &linebuff, lineposn, lineused);
@@ -161,6 +164,7 @@ char *ReadLine::read (char const *prompt)
             }
 
             // delete char before cursor
+            case 'H'-'@':
             case 127: {
                 if (lineposn > 0) {
                     this->writebks (1);
@@ -170,6 +174,23 @@ char *ReadLine::read (char const *prompt)
                     memmove (linebuff + lineposn - 1, linebuff + lineposn, lineused - lineposn);
                     -- lineposn;
                     -- lineused;
+                }
+                break;
+            }
+
+            case 033: {
+                char es[2];
+                rc = read (this->fd, es, 2);
+                if ((rc == 1) && (es[0] == '[')) {
+                    rc = read (this->fd, es + 1, 1);
+                }
+                if ((rc > 0) && (es[0] == '[')) {
+                    switch (es[1]) {
+                        case 'A': goto uparrow;
+                        case 'B': goto dnarrow;
+                        case 'C': goto rtarrow;
+                        case 'D': goto lfarrow;
+                    }
                 }
                 break;
             }
@@ -198,6 +219,16 @@ goteof:;
     return NULL;
 }
 
+void ReadLine::save (char *linebuff)
+{
+    if (this->histcount >= this->histalloc) {
+        this->histalloc += this->histalloc / 2 + 2;
+        assert (this->histcount < this->histalloc);
+        this->histlines  = realloc (this->histlines, this->histalloc * sizeof *this->histlines);
+    }
+    this->histlines[this->histcount++] = linebuff;
+}
+
 int ReadLine::newhistline (int histindex, char **linebuff_r, int lineposn, int lineused)
 {
     int hll = 0;
@@ -213,10 +244,12 @@ int ReadLine::newhistline (int histindex, char **linebuff_r, int lineposn, int l
         memcpy (linebuff, hlb, hll);
         this->writebks (lineposn);
         this->writeall (hlb, hll);
-    }
-    if (lineused > hll) {
         this->writespc (lineused - hll);
         this->writebks (lineused - hll);
+    } else {
+        this->writebks (lineposn);
+        this->writespc (lineposn);
+        this->writebks (lineposn);
     }
     return hll;
 }

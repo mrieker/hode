@@ -29,10 +29,13 @@ struct CType {
     CType mul (CType x);
     CType div (CType x);
     CType par (CType x);
+    CType mulr (CData x);
+    CType divr (CData x);
     CType neg ();
     CType rec ();
     CData abs ();
     CData arg ();
+    CType sq  ();
 
     void addeq (CType x);
     void subeq (CType x);

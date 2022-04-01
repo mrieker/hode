@@ -19,6 +19,8 @@
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
 /*
+    compare results of software floatingpoint with raspi computed floatingpoint
+
     make sure library/magicdefs.asm RASPIFLOAT = 0 (optionally RASPIMULDIV = 0)
     rebuild if changed:
        rm *.hode.o

@@ -23,37 +23,6 @@
 
 #include <stdio.h>
 
-struct FILE {
-    int   wsize;
-    int   wused;
-    char *wbuff;
-    int   wmode;
-    int   wchkd;
-    int   rsize;
-    int   rused;
-    int   rnext;
-    char *rbuff;
-
-    FILE ();
-    virtual ~FILE ();
-
-    int fclose ();
-    int fgetc ();
-    char *fgets (char *buf, int size);
-    int fputc (int chr);
-    int fputs (char const *buf);
-    int maybeflush ();
-    int ffill ();
-    int fflush ();
-
-    virtual int fput (char const *buf, int len);
-
-    virtual void free ();
-    virtual int close ();
-    virtual int read (char *buff, int size);
-    virtual int write (char *buff, int size);
-};
-
 struct FDFILE : FILE {
     int fd;
 

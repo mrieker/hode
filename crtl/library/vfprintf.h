@@ -78,8 +78,6 @@ struct Par { int minwidth;          /* mininum output field width */
              int   expon;
 
              int numout;            /* total number of characters output so far */
-             xprintfcb_t *entry;    /* output callback routine */
-             void *param;           /* output callback routine parameter */                 
            };
 
 /* 'Put' routines output common stuff to the output buffer */

@@ -54,31 +54,31 @@ int FILE::fclose ()
         this->rbuff = NULL;
     }
     if (this->wbuff != NULL) {
-        this->fflush ();
+        this->flush ();
         free (this->wbuff);
         this->wbuff = NULL;
     }
     return this->close ();
 }
 
-int FILE::fgetc ()
+int FILE::getc ()
 {
     if (this->rnext >= this->rused) {
-        int rc = this->ffill ();
+        int rc = this->fill ();
         if (rc <= 0) return -1;
     }
     char ch = this->rbuff[this->rnext++];
     return (unsigned int) (__uint8_t) ch;
 }
 
-char *FILE::fgets (char *buf, int size)
+char *FILE::gets (char *buf, int size)
 {
     if (-- size < 0) return NULL;
 
     char *ptr = buf;
     while (-- size >= 0) {
         if (this->rnext >= this->rused) {
-            int rc = this->ffill ();
+            int rc = this->fill ();
             if (rc <= 0) {
                 if (ptr > buf) break;
                 return NULL;
@@ -93,27 +93,27 @@ char *FILE::fgets (char *buf, int size)
     return buf;
 }
 
-int FILE::fputc (int chr)
+int FILE::putc (int chr)
 {
     if (this->wused >= this->wsize) {
-        int rc = this->fflush ();
+        int rc = this->flush ();
         if (rc < 0) return -1;
     }
     this->wbuff[this->wused++] = (char) chr;
     return this->maybeflush ();
 }
 
-int FILE::fputs (char const *buf)
+int FILE::puts (char const *buf)
 {
-    return this->fput (buf, strlen (buf));
+    return this->put (buf, strlen (buf));
 }
 
-int FILE::fput (char const *buf, int len)
+int FILE::put (char const *buf, int len)
 {
     while (len > 0) {
         int room = this->wsize - this->wused;
         if (room <= 0) {
-            int rc = this->fflush ();
+            int rc = this->flush ();
             if (rc < 0) return -1;
             room = this->wsize - this->wused;
         }
@@ -156,12 +156,12 @@ int FILE::maybeflush ()
             return 0;
         }
     }
-    return this->fflush ();
+    return this->flush ();
 }
 
 // read more into read buffer (rbuff)
 // returns number of characters read (or 0/-1 for eof/error)
-int FILE::ffill ()
+int FILE::fill ()
 {
     if (this->rbuff == NULL) {
         this->rsize = BUFSIZ;
@@ -181,7 +181,7 @@ int FILE::ffill ()
     return rc;
 }
 
-int FILE::fflush ()
+int FILE::flush ()
 {
     if (this->wbuff == NULL) {
         this->wsize = BUFSIZ;

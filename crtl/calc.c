@@ -34,24 +34,39 @@ typedef ComplexD FnFunc ();
 typedef ComplexD OpFunc (ComplexD left, ComplexD rite);
 
 struct Fn {
-    char const *name;
+    char name[6];
     FnFunc *func;
 };
 
 struct Op {
-    char const *name;
+    char name[4];
     OpFunc *func;
 };
 
+struct Var {
+    Var *next;
+    ComplexD valu;
+    char name[1];
+    void print ();
+};
+
 char *lineptr;
+char const prompt[] = "\n> ";
 ComplexD *savedvals;
+double d2r = 1.0;
+double r2d = 1.0;
+FILE *logfile;
 uint allsaveds, numsaveds;
+Var *variables;
 
 bool compute (ComplexD *val_r);
 ComplexD evalexpr (uint preced);
 ComplexD getval ();
 char skipspaces ();
+uint skipvarname ();
 void throwerror (char const *fmt, ...);
+void printval (ComplexD val);
+void lprintf (FILE *stream, char const *fmt, ...);
 
 int main (int argc, char **argv)
 {
@@ -77,19 +92,20 @@ int main (int argc, char **argv)
         if (! compute (&val)) return 1;
 
         // print result without any decoration
-        if (val.imag == 0.0) {
-            printf ("%.16lg\n", val.real);
-        } else if (val.real == 0.0) {
-            printf ("j %.16lg\n", val.imag);
-        } else {
-            printf ("%.16lg j %.16lg\n", val.real, val.imag);
-        }
+        printval (val);
 
         // success
         return 0;
     }
 
     // no command-line parameters, read from stdin and print to stdout
+    logfile = fopen ("calc.log", "a");
+    if (logfile == NULL) {
+        fprintf (stderr, "error creating logfile calc.log: %s\n", strerror (errno));
+    } else {
+        fprintf (logfile, "\n--------\n");
+    }
+
     allsaveds = 64;
     numsaveds = 0;
     savedvals = malloc (allsaveds * sizeof *savedvals);
@@ -116,15 +132,68 @@ int main (int argc, char **argv)
         eof2:;
             lineptr = linebuf;
         } else {
-            lineptr = rl.read ("> ");
-            if (lineptr == NULL) break;
+            lineptr = linebuf = rl.read (prompt);
+            if (linebuf == NULL) break;
+        }
+
+        // maybe log the input line
+        if (logfile != NULL) {
+            fprintf (logfile, "%s%s\n", prompt, lineptr);
         }
 
         // skip blank lines
-        if (skipspaces () == 0) continue;
+        // don't save in readline history
+        if (skipspaces () == 0) {
+            if (rlrc >= 0) free (linebuf);
+            continue;
+        }
+
+        // maybe save in readline history
+        if (rlrc >= 0) rl.save (linebuf);
+
+        // check for varname=expression
+        ComplexD val;
+        char *vareq = strchr (lineptr, '=');
+        if (vareq != NULL) {
+            char *varname = lineptr;
+            uint varnamelen = skipvarname ();
+            if (varnamelen > 0) {
+
+                // optional spaces before equal sign
+                skipspaces ();
+                if (lineptr == vareq) {
+
+                    // compute expression before altering any definitions
+                    ++ lineptr;
+                    if (compute (&val)) {
+
+                        // search definitions for same name
+                        Var *var;
+                        for (var = variables; var != NULL; var = var->next) {
+                            uint len = strlen (var->name);
+                            if ((len == varnamelen) && (memcmp (var->name, varname, len) == 0)) goto savevar;
+                        }
+
+                        // make a new var and link in list
+                        var = malloc (varnamelen + sizeof *var);
+                        var->next = variables;
+                        memcpy (var->name, varname, varnamelen);
+                        var->name[varnamelen] = 0;
+                        variables = var;
+
+                        // save value in var and print
+                    savevar:;
+                        var->valu = val;
+                        var->print ();
+                    }
+                    continue;
+                }
+            }
+            fprintf (stderr, "bad variable name <%.*s>\n", vareq - varname, varname);
+            continue;
+        }
 
         // compute value
-        ComplexD val;
         if (compute (&val)) {
 
             // save result in saved-values array
@@ -135,16 +204,16 @@ int main (int argc, char **argv)
             savedvals[numsaveds] = val;
 
             // print result along with saved-values array index
-            if (val.imag == 0.0) {
-                printf (" $%u = %.16lg\n", numsaveds, val.real);
-            } else if (val.real == 0.0) {
-                printf (" $%u = j %.16lg\n", numsaveds, val.imag);
-            } else {
-                printf (" $%u = %.16lg j %.16lg\n", numsaveds, val.real, val.imag);
-            }
+            lprintf (stdout, " $%u = ", numsaveds);
+            printval (val);
 
             numsaveds ++;
         }
+    }
+
+    if (logfile != NULL) {
+        fprintf (logfile, "%s*EOF*\n", prompt);
+        fclose (logfile);
     }
 
     return 0;
@@ -165,10 +234,10 @@ bool compute (ComplexD *val_r)
         }
         return 1;
     } catch (char *err) {
-        fprintf (stderr, "%s\n", err);
+        lprintf (stderr, "%s\n", err);
         free (err);
     } catch (char const *err) {
-        fprintf (stderr, "%s\n", err);
+        if (err[0] != 0) lprintf (stderr, "%s\n", err);
     }
     return 0;
 }
@@ -179,22 +248,24 @@ ComplexD opsub (ComplexD left, ComplexD rite) { return left.sub (rite); }
 ComplexD opmul (ComplexD left, ComplexD rite) { return left.mul (rite); }
 ComplexD opdiv (ComplexD left, ComplexD rite) { return left.div (rite); }
 ComplexD oppow (ComplexD left, ComplexD rite) { return left.pow (rite); }
+ComplexD oplog (ComplexD left, ComplexD rite) { return rite.log ().div (left.log ()); }
 
 Op const optabl0[] = {
     { "+",  opadd },
     { "-",  opsub },
-    { NULL, NULL }
+    { "",   NULL }
 };
 
 Op const optabl1[] = {
     { "*",  opmul },
     { "/",  opdiv },
-    { NULL, NULL }
+    { "",   NULL }
 };
 
 Op const optabl2[] = {
     { "**", oppow },
-    { NULL, NULL }
+    { "//", oplog },
+    { "",   NULL }
 };
 
 #define NPRECED 3
@@ -217,7 +288,7 @@ ComplexD evalexpr (uint preced)
 
     while (skipspaces () != 0) {
         Op const *op;
-        for (op = optabls[preced]; op->name != NULL; op ++) {
+        for (op = optabls[preced]; op->name[0] != 0; op ++) {
             uint len = strlen (op->name);
             if (memcmp (lineptr, op->name, len) == 0) {
                 lineptr += len;
@@ -236,38 +307,48 @@ ComplexD evalexpr (uint preced)
 
 // named functions
 ComplexD fnabs   () { ComplexD a = getval (); return ComplexD::make (a.abs (), 0); }
-ComplexD fnacos  () { ComplexD a = getval (); return a.acos (); }
-ComplexD fnasin  () { ComplexD a = getval (); return a.asin (); }
-ComplexD fnatan  () { ComplexD a = getval (); return a.atan (); }
-ComplexD fncos   () { ComplexD a = getval (); return a.cos  (); }
+ComplexD fnacos  () { ComplexD a = getval (); return a.acos ().mulr (r2d); }
+ComplexD fnarg   () { ComplexD a = getval (); return ComplexD::make (a.arg () * r2d, 0); }
+ComplexD fnasin  () { ComplexD a = getval (); return a.asin ().mulr (r2d); }
+ComplexD fnatan  () { ComplexD a = getval (); return a.atan ().mulr (r2d); }
+ComplexD fncos   () { ComplexD a = getval (); return a.mulr (d2r).cos (); }
+ComplexD fndeg   () { r2d = 180.0 / M_PI; d2r = M_PI / 180.0; return getval (); }
+ComplexD fndump  () { for (Var *var = variables; var != NULL; var = var->next) var->print (); throw ""; }
 ComplexD fne     () { return ComplexD::make (M_E, 0); }
+ComplexD fnhypot () { ComplexD a = getval (); ComplexD b = getval (); return a.sq ().add (b.sq ()).sqrt (); }
 ComplexD fnim    () { ComplexD a = getval (); return ComplexD::make (a.imag, 0); }
 ComplexD fnln    () { ComplexD a = getval (); return a.log (); }
-ComplexD fnlog   () { ComplexD a = getval (); return a.log ().div (ComplexD::make (M_LN10, 0)); }
 ComplexD fnpi    () { return ComplexD::make (M_PI, 0); }
-ComplexD fnquit  () { exit (0); }
+ComplexD fnquit  () { if (logfile != NULL) fclose (logfile); exit (0); }
+ComplexD fnrad   () { r2d = 1.0; d2r = 1.0; return getval (); }
 ComplexD fnre    () { ComplexD a = getval (); return ComplexD::make (a.real, 0); }
-ComplexD fnsin   () { ComplexD a = getval (); return a.sin  (); }
+ComplexD fnsin   () { ComplexD a = getval (); return a.mulr (d2r).sin (); }
+ComplexD fnsq    () { ComplexD a = getval (); return a.sq   (); }
 ComplexD fnsqrt  () { ComplexD a = getval (); return a.sqrt (); }
-ComplexD fntan   () { ComplexD a = getval (); return a.tan  (); }
+ComplexD fntan   () { ComplexD a = getval (); return a.mulr (d2r).tan (); }
 
 Fn const fntabl[] = {
+    { "abs",   fnabs   },
     { "acos",  fnacos  },
+    { "arg",   fnarg   },
     { "asin",  fnasin  },
     { "atan",  fnatan  },
-    { "quit",  fnquit  },
-    { "sqrt",  fnsqrt  },
-    { "abs",   fnabs   },
     { "cos",   fncos   },
-    { "log",   fnlog   },
-    { "sin",   fnsin   },
-    { "tan",   fntan   },
+    { "deg",   fndeg   },
+    { "dump",  fndump  },
+    { "e",     fne     },
+    { "hypot", fnhypot },
     { "im",    fnim    },
     { "ln",    fnln    },
     { "pi",    fnpi    },
+    { "quit",  fnquit  },
+    { "rad",   fnrad   },
     { "re",    fnre    },
-    { "e",     fne     },
-    { NULL,    NULL    }
+    { "sin",   fnsin   },
+    { "sq",    fnsq    },
+    { "sqrt",  fnsqrt  },
+    { "tan",   fntan   },
+    { "",      NULL    }
 };
 
 // get next value from input string
@@ -306,15 +387,24 @@ ComplexD getval ()
         lineptr = endnum;
         goto ret;
     }
-    if ((ch >= 'a') && (ch <= 'z')) {
-        for (Fn const *fn = fntabl; fn->name != NULL; fn ++) {
+    char *varname = lineptr;
+    uint varnamelen = skipvarname ();
+    if (varnamelen > 0) {
+        for (Var *var = variables; var != NULL; var = var->next) {
+            uint len = strlen (var->name);
+            if ((len == varnamelen) && (memcmp (var->name, varname, len) == 0)) {
+                val = var->valu;
+                goto ret;
+            }
+        }
+        for (Fn const *fn = fntabl; fn->name[0] != 0; fn ++) {
             uint len = strlen (fn->name);
-            if (strncasecmp (lineptr, fn->name, len) == 0) {
-                lineptr += len;
+            if ((len == varnamelen) && (memcmp (fn->name, varname, len) == 0)) {
                 val = fn->func ();
                 goto ret;
             }
         }
+        throwerror ("unknown function/variable <%.*s>", varnamelen, varname);
     }
     val.real = 0.0;
     val.imag = 0.0;
@@ -340,16 +430,39 @@ ret:
 //  input:
 //   lineptr = points to input string
 //  output:
-//   returns to next non-blank character (or nul if end-of-string)
+//   returns next non-blank character (or nul if end-of-string or comment)
 //   lineptr = advanced to next non-blank character (or nul if end-of-string)
 char skipspaces ()
 {
     char ch;
     while ((ch = *lineptr) != 0)  {
+        if (ch == '#') return 0;
         if (ch > ' ') break;
         lineptr ++;
     }
     return ch;
+}
+
+// varname must start with letter
+// and may contain additional letters and numbers
+// don't allow varname starting with "j" followed by digits cuz it looks like imaginary number
+uint skipvarname ()
+{
+    char *varname = lineptr;
+    char ch = *lineptr;
+    if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z'))) {
+        bool imag = ch == 'j';
+        while (1) {
+            ch = *(++ lineptr);
+            if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')) || (ch == '_')) {
+                imag = 0;
+                continue;
+            }
+            if ((ch < '0') || (ch > '9')) break;
+        }
+        if (imag) lineptr = varname;
+    }
+    return lineptr - varname;
 }
 
 // format and throw error message
@@ -362,4 +475,39 @@ void throwerror (char const *fmt, ...)
     vasprintf (&buf, fmt, ap);
     va_end (ap);
     throw buf;
+}
+
+// print variable
+void Var::print ()
+{
+    lprintf (stdout, " %s = ", this->name);
+    printval (this->valu);
+}
+
+// print complex number
+void printval (ComplexD val)
+{
+    if (val.imag == 0.0) {
+        lprintf (stdout, "%.16lg\n", val.real);
+    } else if (val.real == 0.0) {
+        lprintf (stdout, "j %.16lg\n", val.imag);
+    } else {
+        lprintf (stdout, "%.16lg j %.16lg\n", val.real, val.imag);
+    }
+}
+
+// print line to stream and logfile
+void lprintf (FILE *stream, char const *fmt, ...)
+{
+    va_list ap;
+
+    va_start (ap, fmt);
+    vfprintf (stream, fmt, ap);
+    va_end (ap);
+
+    if (logfile != NULL) {
+        va_start (ap, fmt);
+        vfprintf (logfile, fmt, ap);
+        va_end (ap);
+    }
 }
