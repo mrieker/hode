@@ -129,10 +129,6 @@ void FuncDecl::parseFuncBody ()
                 if (lastopen != nullptr) fclose (lastopen);
                 lastfile = token->getFile ();
                 lastopen = fopen (lastfile, "r");
-                if (lastopen == nullptr) {
-                    fprintf (stderr, "error opening %s: %m\n", lastfile);
-                    assert_false ();
-                }
 
                 // next read from the file would be line 1
                 lastline = 0;
@@ -147,28 +143,30 @@ void FuncDecl::parseFuncBody ()
             }
 
             // print source lines up to and including the one for the machine language instruction
-            while (lastline < token->getLine ()) {
+            if (lastopen != nullptr) {
+                while (lastline < token->getLine ()) {
 
-                // read next source file line
-                ++ lastline;
-                char *p = linebuf;
-                while (true) {
-                    if (fgets (p, linebuf + linelen - p, lastopen) == nullptr) {
-                        fprintf (stderr, "eof readline %s line %d\n", lastfile, lastline);
-                        assert_false ();
+                    // read next source file line
+                    ++ lastline;
+                    char *p = linebuf;
+                    while (true) {
+                        if (fgets (p, linebuf + linelen - p, lastopen) == nullptr) {
+                            fprintf (stderr, "eof readline %s line %d\n", lastfile, lastline);
+                            assert_false ();
+                        }
+                        p += strlen (p);
+                        if ((p > linebuf) && (p[-1] == '\n')) break;
+                        int offs = p - linebuf;
+                        linelen += linelen / 2;
+                        linebuf  = (char *) realloc (linebuf, linelen);
+                        p = linebuf + offs;
                     }
-                    p += strlen (p);
-                    if ((p > linebuf) && (p[-1] == '\n')) break;
-                    int offs = p - linebuf;
-                    linelen += linelen / 2;
-                    linebuf  = (char *) realloc (linebuf, linelen);
-                    p = linebuf + offs;
-                }
 
-                // if we haven't printed the line before, print it to output file and remember it was printed
-                if (lastprinted->second < lastline) {
-                    fprintf (sfile, "; %s:%d: %s", lastfile, lastline, linebuf);
-                    lastprinted->second = lastline;
+                    // if we haven't printed the line before, print it to output file and remember it was printed
+                    if (lastprinted->second < lastline) {
+                        fprintf (sfile, "; %s:%d: %s", lastfile, lastline, linebuf);
+                        lastprinted->second = lastline;
+                    }
                 }
             }
         }
@@ -269,6 +267,19 @@ Stmt *FuncDecl::parseStatement (Scope *scope, SwitchStmt *outerswitch)
         //  delete pointer;
         case KW_DELETE: {
 
+            bool arrstyle = false;
+            Token *arrtok = gettoken ();
+            if (arrtok->isKw (KW_OBRKT)) {
+                arrtok = gettoken ();
+                if (! arrtok->isKw (KW_CBRKT)) {
+                    printerror (arrtok, "expecting ']' after 'delete['");
+                    pushtoken (arrtok);
+                }
+                arrstyle = true;
+            } else {
+                pushtoken (arrtok);
+            }
+
             // get pointer expression
             Expr *mempointer = scope->parsexpression (false, false);
             Type *exptype = mempointer->getType ();
@@ -279,7 +290,9 @@ Stmt *FuncDecl::parseStatement (Scope *scope, SwitchStmt *outerswitch)
             Type *basetype = ptrtype->getBaseType ();
 
             // maybe it's a struct with a destructor function, generate call to destructor
-            mempointer = basetype->callTermFunc (scope, tok, mempointer);
+            // if deleting a rootward part of a leaf, __term() is virtual so we terminate the leafmost type first then all the rootward types
+            // ...and the leafmost __term() returns pointer to leafmost type
+            mempointer = basetype->callTermFunc (scope, tok, mempointer, arrstyle);
 
             // call free(mempointer)
             CallExpr *callfree = new CallExpr (scope, tok);

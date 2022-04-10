@@ -21,12 +21,22 @@
 
 void putstr (char const *str);
 
-struct Struct {
+struct BaseClass {
+    int basevar;
+    virtual ~BaseClass ();
+};
+
+struct Struct : BaseClass {
     double somevar;
     int anothervar;
 
     virtual ~Struct ();
 };
+
+BaseClass::~BaseClass ()
+{
+    putstr ("I`m dead!");
+}
 
 Struct::~Struct ()
 {
@@ -36,5 +46,9 @@ Struct::~Struct ()
 void test34 ()
 {
     Struct *s = new Struct;
-    delete s;
+    BaseClass *b = s;
+    delete b;
+
+    Struct *a = new Struct[2];
+    delete[] a;
 }

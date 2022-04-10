@@ -30,6 +30,7 @@ int strncasecmp (char const *a, char const *b, __size_t len);
 char *strchr (char const *s, char c);
 int strcmp (char const *a, char const *b);
 void strcpy (char *d, char const *s);
+char *strdup (char const *s);
 __size_t strlen (char const *s);
 
 #endif

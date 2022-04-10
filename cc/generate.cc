@@ -583,15 +583,18 @@ Prim *CallExpr::generexpr (Prim *prevprim, ValDecl **exprval_r)
         // call member function
         switch (mfuncexpr->memfunc->getStorClass ()) {
 
+            // handle virtual function
+            case KW_VIRTUAL: {
+                if (! mfuncexpr->ignvirt) {
+                    prevprim = mfuncexpr->lookupvirtualfunction (prevprim, cp);
+                    break;
+                }
+                // fallthrough
+            }
+
             // non-virtual function
             case KW_NONE: {
                 cp->entval = mfuncexpr->memfunc;
-                break;
-            }
-
-            // handle virtual function
-            case KW_VIRTUAL: {
-                prevprim = mfuncexpr->lookupvirtualfunction (prevprim, cp);
                 break;
             }
 

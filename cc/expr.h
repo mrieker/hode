@@ -161,8 +161,8 @@ struct CastExpr : Expr {
 };
 
 // accessing a member function
-//   pointer->member (...)
-//              ^-we are here
+//   pointer->[memstruct::]memfunc (...)
+//                            ^-we are here
 struct MFuncExpr : Expr {
     MFuncExpr (Scope *exprscope, Token *exprtoken);
 
@@ -176,6 +176,8 @@ struct MFuncExpr : Expr {
     Expr *ptrexpr;          // pointer expression, ie, 'this' value passed to member function
     StructType *memstruct;  // struct it was found in (might be a parent)
     FuncDecl *memfunc;      // member function being accessed
+    bool ignvirt;           // false: call func via vtable
+                            //  true: bypass vtable, call func directly
 };
 
 struct QMarkExpr : Expr {

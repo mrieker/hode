@@ -70,6 +70,7 @@ struct Scope {
     void parsevaldecl (PvEnv pvenv, DeclVec *declvec);
     Type *parsetypecast ();
     Expr *parseinitexpr (Type *vartype, bool isarray, tsize_t *arrsize_r);
+    void maybeoutputstructinit (VarDecl *vardecl);
     bool istypenext ();
     bool istypetoken (Token *tok);
     void checkAsneqCompat (Token *optok, Type *lefttype, Type *ritetype);

@@ -125,11 +125,6 @@ int FILE::put (char const *buf, int len)
     return this->maybeflush ();
 }
 
-void FILE::free ()
-{
-    delete this;
-}
-
 int FILE::close ()
 {
     return 0;
@@ -204,11 +199,6 @@ int FILE::flush ()
 FDFILE::FDFILE ()
 {
     this->fd = -1;
-}
-
-void FDFILE::free ()
-{
-    delete this;
 }
 
 int FDFILE::close ()

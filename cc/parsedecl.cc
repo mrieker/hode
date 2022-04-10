@@ -255,14 +255,7 @@ void Scope::parsedecl (PvEnv pvenv, DeclVec *declvec)
             } else {
 
                 // if struct or array of struct, give it struct init expr to fill in vtable pointers
-                if (storclass != KW_EXTERN) {
-                    StructType *st = (hasarrsize ? vartype->stripCVMod ()->castPtrType ()->getBaseType () : vartype)->stripCVMod ()->castStructType ();
-                    if (st != nullptr) {
-                        StructInitExpr *six = new StructInitExpr (this, varnametok);
-                        six->structype = st;
-                        vardecl->setInitExpr (six);
-                    }
-                }
+                maybeoutputstructinit (vardecl);
             }
 
             // if global scope, output label and .blkb or .word etc to allocate storage
@@ -400,14 +393,7 @@ void Scope::parsedecl (PvEnv pvenv, DeclVec *declvec)
             if (declvec != nullptr) declvec->push_back (vardecl);
 
             // if struct or array of struct, give it struct init expr to fill in vtable pointers
-            if (storclass != KW_EXTERN) {
-                StructType *st = (hasarrsize ? vartype->stripCVMod ()->castPtrType ()->getBaseType () : vartype)->stripCVMod ()->castStructType ();
-                if (st != nullptr) {
-                    StructInitExpr *six = new StructInitExpr (this, varnametok);
-                    six->structype = st;
-                    vardecl->setInitExpr (six);
-                }
-            }
+            maybeoutputstructinit (vardecl);
 
             // if global scope, output label and .blkb or .word etc to allocate storage
             if ((pvenv == PE_GLOBAL) && (storclass != KW_TYPEDEF)) {
@@ -844,6 +830,8 @@ Type *Scope::parsenamedtype ()
                             if (funcdecl->getFuncType ()->getRawParams ()->size () != 0) {
                                 printerror (funcdecl->getDefTok (), "destructor must not have any parameters");
                             }
+                            // virtualness is handled by __term() wrapper virtual function
+                            funcdecl->setStorClass (KW_NONE);
                         }
                         funcs->push_back (funcdecl);
                         continue;
@@ -990,6 +978,38 @@ Type *Scope::parsenamedtype ()
     return type;
 }
 
+// if variable is a struct or array of struct var, output code to initialize any vtable pointers
+// assume there is no initialization expression present
+void Scope::maybeoutputstructinit (VarDecl *vardecl)
+{
+    Keywd storclass = vardecl->getStorClass ();
+    if ((storclass != KW_EXTERN) && (storclass != KW_TYPEDEF)) {
+        bool isarray = vardecl->isArray ();
+        Type *vartype = vardecl->getType ();
+        StructType *st = (isarray ? vartype->stripCVMod ()->castPtrType ()->getBaseType () : vartype)->stripCVMod ()->castStructType ();
+        if ((st != nullptr) && st->hasinitfunc ()) {
+            Token *varnametok = vardecl->getDefTok ();
+            if (isarray) {
+                tsize_t arrsize = vardecl->getArrSize ();
+                ArrayInitExpr *aix = new ArrayInitExpr (this, varnametok);
+                aix->valuetype = st;
+                aix->numarrayelems = arrsize;
+                for (tsize_t index = 0; index < arrsize; index ++) {
+                    StructInitExpr *six = new StructInitExpr (this, varnametok);
+                    six->structype = st;
+                    std::pair<tsize_t,Expr *> pair (index, six);
+                    aix->exprs.push_back (pair);
+                }
+                vardecl->setInitExpr (aix);
+            } else {
+                StructInitExpr *six = new StructInitExpr (this, varnametok);
+                six->structype = st;
+                vardecl->setInitExpr (six);
+            }
+        }
+    }
+}
+
 // helpers for parsexpression() below
 
 #define exstack_pop_back() ({ assert (! exstack.empty ()); Expr *ex = exstack.back (); exstack.pop_back (); ex; })
@@ -1115,7 +1135,7 @@ Expr *Scope::parseinitexpr (Type *vartype, bool isarray, tsize_t *arrsize_r)
                     throwerror (tok, "expecting 'name =' for struct/union init member");
                 }
                 FuncDecl *memfunc;
-                if (! structype->getMemberByName (tok, name, &memstruct, &memfunc, &memvar, &memoffset, &index)) {
+                if (! structype->getMemberByName (tok, nullptr, name, &memstruct, &memfunc, &memvar, &memoffset, &index)) {
                     throwerror (tok, "unknown struct/union '%s' member '%s'", structype->getName (), name);
                 }
                 if (memfunc != nullptr) {
@@ -1237,9 +1257,7 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
             }
 
             // special processing for 'new basetype[arrsubscr]'
-            //  structtype::__init (nullptr, numelem)
-            // or
-            //  malloc (size)
+            //  structtype::__init (malloc2 (numelem, size), numelem)
             case KW_NEW: {
 
                 // parse basetype and optional [arrsubscr]
@@ -1252,6 +1270,7 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                     if (! cbkttok->isKw (KW_CBRKT)) {
                         throwerror (cbkttok, "expecting ']' at end of subscript");
                     }
+                    arrsubscr = castToType (cbkttok, sizetype, arrsubscr);
                 } else {
                     pushtoken (obkttok);
                     arrsubscr = ValExpr::createsizeint (this, tok, 1, false);
@@ -1402,7 +1421,7 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                             VarDecl *memvardecl;
                             tsize_t memoffset;
                             tsize_t memindex;
-                            if (! structtype->getMemberByName (tok2, name2, &memstruct, &memfuncdecl, &memvardecl, &memoffset, &memindex)) {
+                            if (! structtype->getMemberByName (tok2, nullptr, name2, &memstruct, &memfuncdecl, &memvardecl, &memoffset, &memindex)) {
                                 throwerror (tok2, "struct '%s' does not contain member '%s' ", symname, name2);
                             }
                             vx->valdecl = (memfuncdecl != nullptr) ? (ValDecl *) memfuncdecl : (ValDecl *) memvardecl;
@@ -1950,13 +1969,29 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                     throwerror (memtoken, "expecting struct/union member name");
                 }
 
+                // maybe member name is prefixed with parenttype::
+                bool ignvirt = false;
+                char const *parentstruct = nullptr;
+                Token *cctok = gettoken ();
+                if (! cctok->isKw (KW_COLON2)) {
+                    pushtoken (cctok);
+                } else {
+                    ignvirt = true;
+                    parentstruct = memsym->getSym ();
+                    memtoken = gettoken ();
+                    memsym = memtoken->castSymToken ();
+                    if (memsym == nullptr) {
+                        throwerror (memtoken, "expecting struct/union member name");
+                    }
+                }
+
                 // look for it in struct type
                 StructType *memstruct = nullptr;    // parent found in or same as structtype if in child
                 FuncDecl   *memfunc   = nullptr;    // member function declaration
                 VarDecl    *memvar    = nullptr;    // member variable declaration
                 tsize_t     memoffs   = 0;          // offset from base of struct
                 tsize_t     memindex  = 0;          // index of member in struct
-                if (! structtype->getMemberByName (memtoken, memsym->getSym (), &memstruct, &memfunc, &memvar, &memoffs, &memindex)) {
+                if (! structtype->getMemberByName (memtoken, parentstruct, memsym->getSym (), &memstruct, &memfunc, &memvar, &memoffs, &memindex)) {
                     throwerror (memtoken, "member '%s' not found in struct/union '%s'", memsym->getSym (), structtype->getName ());
                 }
 
@@ -1976,6 +2011,7 @@ Expr *Scope::parsexpression (bool stoponcomma, bool stoponcolon)
                     mfx->ptrexpr   = castToType (tok, memstruct->getPtrType (), structexpr);
                     mfx->memstruct = memstruct;
                     mfx->memfunc   = memfunc;
+                    mfx->ignvirt   = ignvirt;
                     exstack.push_back (mfx);
                     goto getbop;
                 }

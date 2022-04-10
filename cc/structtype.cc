@@ -168,6 +168,14 @@ void StructType::setMembers (MemberScope *memscope, std::vector<FuncDecl *> *fun
     for (FuncDecl *f : *funcs) f->setEncType (this);
     for (VarDecl  *v : *vars)  v->setEncType (this);
 
+    // see if any parent has __init() or __term() functions
+    bool parentinit = false;
+    bool parentterm = false;
+    for (StructType *exttype : exttypes) {
+        if (exttype->initfuncdecl != nullptr) parentinit = true;
+        if (exttype->termfuncdecl != nullptr) parentterm = true;
+    }
+
     // see if there is a constructor or any virtual functions
     hasconstructor = false;
     hasdestructor  = false;
@@ -176,6 +184,29 @@ void StructType::setMembers (MemberScope *memscope, std::vector<FuncDecl *> *fun
         if (strcmp (f->getName (), "__ctor") == 0) hasconstructor = true;
         if (strcmp (f->getName (), "__dtor") == 0) hasdestructor  = true;
         if (f->getStorClass () == KW_VIRTUAL) hasvfuncs = true;
+    }
+
+    // having a destructor means this one needs an __term() function
+    if (hasdestructor | parentterm) {
+
+        // set up parameter:
+        //  (tsize_t numelem)
+        ParamScope *paramscope = new ParamScope (globalscope);
+        std::vector<VarDecl *> *termfuncparams = new std::vector<VarDecl *> ();
+        termfuncparams->push_back (new VarDecl ("numelem", paramscope, this->getDefTok (), sizetype, KW_NONE));
+
+        // create function type
+        //  void * (tsize_t numelem)
+        FuncType *termfunctype = FuncType::create (this->getDefTok (), voidtype->getPtrType (), termfuncparams);
+
+        // declare function as a virtual struct member
+        termfuncdecl = new FuncDecl ("__term", memscope, this->getDefTok (), termfunctype, KW_VIRTUAL, termfuncparams, paramscope);
+        termfuncdecl->setEncType (this);
+
+        // add it to struct's list of functions
+        functions->push_back (termfuncdecl);
+
+        hasvfuncs = true;
     }
 
     // virtual functions means it has a vtable
@@ -213,14 +244,6 @@ void StructType::setMembers (MemberScope *memscope, std::vector<FuncDecl *> *fun
         this->variables->insert (this->variables->begin (), vtableptr);
     }
 
-    // see if any parent has __init() or __term() functions
-    bool parentinit = false;
-    bool parentterm = false;
-    for (StructType *exttype : exttypes) {
-        if (exttype->initfuncdecl != nullptr) parentinit = true;
-        if (exttype->termfuncdecl != nullptr) parentterm = true;
-    }
-
     // having a constructor and/or virtual functions and/or parent with __init(), means this one needs an __init() function
     // the __init() function calls parent __init()s, fills in vtable pointer if any and calls __ctor() if any
     if (hasconstructor | hasvfuncs | parentinit) {
@@ -245,28 +268,6 @@ void StructType::setMembers (MemberScope *memscope, std::vector<FuncDecl *> *fun
 
         // add it to struct's list of functions
         functions->push_back (initfuncdecl);
-    }
-
-    // having a destructor means this one needs an __term() function
-    if (hasdestructor | parentterm) {
-
-        // set up parameter:
-        //  (structtype *pointer, tsize_t numelem)
-        ParamScope *paramscope = new ParamScope (globalscope);
-        std::vector<VarDecl *> *termfuncparams = new std::vector<VarDecl *> ();
-        termfuncparams->push_back (new VarDecl ("pointer", paramscope, this->getDefTok (), this->getPtrType (), KW_NONE));
-        termfuncparams->push_back (new VarDecl ("numelem", paramscope, this->getDefTok (), sizetype, KW_NONE));
-
-        // create function type
-        //  structtype * (structtype *pointer, tsize_t numelem)
-        FuncType *termfunctype = FuncType::create (this->getDefTok (), this->getPtrType (), termfuncparams);
-
-        // declare function as a static struct member
-        termfuncdecl = new FuncDecl ("__term", memscope, this->getDefTok (), termfunctype, KW_STATIC, termfuncparams, paramscope);
-        termfuncdecl->setEncType (this);
-
-        // add it to struct's list of functions
-        functions->push_back (termfuncdecl);
     }
 }
 
@@ -374,41 +375,64 @@ Prim *StructType::genInitCall (Scope *scope, Token *token, Prim *prevprim, ValDe
     return prevprim;
 }
 
-// if struct has a destructor function, insert a call
-// this is used when a struct type variable or array is freed with delete
-Expr *StructType::callTermFunc (Scope *scope, Token *token, Expr *mempointer)
+// if struct has a __term() terminator function, insert a call
+// this is used when a struct type variable or array of structs is freed with delete
+Expr *StructType::callTermFunc (Scope *scope, Token *token, Expr *mempointer, bool arrstyle)
 {
     if (termfuncdecl != nullptr) {
+        Expr *numelems;
 
-        // make a temp to hold mempointer in case mempointer is complicated
-        VarDecl *memtempdecl = VarDecl::newtemp (scope, token, this->getPtrType ());
-        AsnopExpr *asntemp = new AsnopExpr (scope, token);
-        asntemp->leftexpr  = new ValExpr (scope, token, memtempdecl);
-        asntemp->riteexpr  = mempointer;
+        // delete[] can be an array or scalar, but it *MUST* be the leafmost type and *MUST* be element[0] if an array
+        // delete will work for scalar or 1-element array and can be leafmost or any rootward type of the object
+        if (arrstyle) {
 
-        // cast mempointer to (__size_t const *)
-        Expr *casted = scope->castToType (token, sizetype->getConstType ()->getPtrType (), new ValExpr (scope, token, memtempdecl));
+            // make a temp to hold mempointer in case mempointer is complicated
+            VarDecl *memtempdecl = VarDecl::newtemp (scope, token, this->getPtrType ());
+            AsnopExpr *asntemp = new AsnopExpr (scope, token);
+            asntemp->leftexpr  = new ValExpr (scope, token, memtempdecl);
+            asntemp->riteexpr  = mempointer;
 
-        // offset the cased pointer to # of array elements
-        BinopExpr *offsptr = new BinopExpr (scope, token);
-        offsptr->opcode    = OP_ADD;
-        offsptr->leftexpr  = casted;
-        offsptr->riteexpr  = ValExpr::createsizeint (scope, token, CARROFFS, true);
-        offsptr->restype   = sizetype->getConstType ()->getPtrType ();
+            // cast temp to (__size_t const *)
+            Expr *casted = scope->castToType (token, sizetype->getConstType ()->getPtrType (), asntemp);
 
-        // get number of array elements (or 1 for scalar)
-        UnopExpr *numelems = new UnopExpr (scope, token);
-        numelems->opcode   = OP_DEREF;
-        numelems->subexpr  = offsptr;
-        numelems->restype  = sizetype;
+            // offset the casted pointer to # of array elements as set up by __malloc2()
+            BinopExpr *offsptr = new BinopExpr (scope, token);
+            offsptr->opcode    = OP_ADD;
+            offsptr->leftexpr  = casted;
+            offsptr->riteexpr  = ValExpr::createsizeint (scope, token, CARROFFS, true);
+            offsptr->restype   = sizetype->getConstType ()->getPtrType ();
 
-        // call structtype::__term(mempointer,numelems)
+            // get number of array elements (or 1 for scalar)
+            // this will get incorrect value if not leafmost type or if not element[0]
+            UnopExpr *nex = new UnopExpr (scope, token);
+            nex->opcode   = OP_DEREF;
+            nex->subexpr  = offsptr;
+            nex->restype  = sizetype;
+            numelems = nex;
+
+            // use temp var for array pointer from now on
+            mempointer = new ValExpr (scope, token, memtempdecl);
+        } else {
+
+            // assume scalar
+            // if a rootward type, its virtual __term() will be overridden with leafmost __term()
+            numelems = ValExpr::createsizeint (scope, token, 1, false);
+        }
+
+        // mempointer->__term
+        MFuncExpr *mfx = new MFuncExpr (scope, token);
+        mfx->ptrexpr   = mempointer;
+        mfx->memstruct = this;
+        mfx->memfunc   = termfuncdecl;
+
+        // call mempointer->__term(numelems)
         CallExpr *callterm = new CallExpr (scope, token);
-        callterm->funcexpr = new ValExpr (scope, token, termfuncdecl);
-        callterm->argexprs.push_back (asntemp);
+        callterm->funcexpr = mfx;
         callterm->argexprs.push_back (numelems);
 
-        // it returns mempointer exactly as passed
+        // it returns mempointer pointing to beginning of struct
+        // if deleted from a rootward pointer, its virtual __term() was overridden by leafmost __term()
+        // ...which returns the leafmost struct pointer
         mempointer = callterm;
     }
     return mempointer;
@@ -497,13 +521,15 @@ tsize_t StructType::getMemberOffset (Token *errtok, char const *name)
     FuncDecl *memfuncdecl;
     VarDecl *memvardecl;
     tsize_t memoffset, memindex;
-    bool ok = getMemberByName (errtok, name, &memstruct, &memfuncdecl, &memvardecl, &memoffset, &memindex);
+    bool ok = getMemberByName (errtok, nullptr, name, &memstruct, &memfuncdecl, &memvardecl, &memoffset, &memindex);
     assert (ok && (memvardecl != nullptr));
     return memoffset;
 }
 
 // get member of the struct/union
 //  input:
+//   parenttype = nullptr: look in this or any rootward struct we inherit from
+//                   else: only look in this rootward struct
 //   name = name of member to find
 //  output:
 //   returns false: nothing found
@@ -513,7 +539,7 @@ tsize_t StructType::getMemberOffset (Token *errtok, char const *name)
 //                  *memvardecl_r  = member variable declaration or nullptr
 //                                   *memoffset_r = offset of variable member in 'this' struct
 //                                   *memindex_r  = index of variable member within 'this' struct
-bool StructType::getMemberByName (Token *errtok, char const *name, StructType **memstruct_r, FuncDecl **memfuncdecl_r, VarDecl **memvardecl_r, tsize_t *memoffset_r, tsize_t *memindex_r)
+bool StructType::getMemberByName (Token *errtok, char const *parenttype, char const *name, StructType **memstruct_r, FuncDecl **memfuncdecl_r, VarDecl **memvardecl_r, tsize_t *memoffset_r, tsize_t *memindex_r)
 {
     if (functions == nullptr) return false;
 
@@ -527,7 +553,7 @@ bool StructType::getMemberByName (Token *errtok, char const *name, StructType **
     for (VarDecl *v : *variables) {
         tsize_t alin = v->getVarAlign (errtok);
         offset = (offset + alin - 1) & - alin;
-        if (strcmp (v->getName (), name) == 0) {
+        if (((parenttype == nullptr) || (strcmp (this->getName (), parenttype) == 0)) && (strcmp (v->getName (), name) == 0)) {
             *memstruct_r   = this;
             *memfuncdecl_r = nullptr;
             *memvardecl_r  = v;
@@ -541,7 +567,7 @@ bool StructType::getMemberByName (Token *errtok, char const *name, StructType **
 
     // functions do not consume any index values or offset space
     for (FuncDecl *f : *functions) {
-        if (strcmp (f->getName (), name) == 0) {
+        if (((parenttype == nullptr) || (strcmp (this->getName (), parenttype) == 0)) && (strcmp (f->getName (), name) == 0)) {
             *memstruct_r   = this;
             *memfuncdecl_r = f;
             *memvardecl_r  = nullptr;
@@ -556,7 +582,8 @@ bool StructType::getMemberByName (Token *errtok, char const *name, StructType **
     for (StructType *exttype : exttypes) {
         tsize_t alin = exttype->getTypeAlign (errtok);
         offset = (offset + alin - 1) & - alin;
-        if (exttype->getMemberByName (errtok, name, memstruct_r, memfuncdecl_r, memvardecl_r, memoffset_r, memindex_r)) {
+        if (((parenttype == nullptr) || (strcmp (exttype->getName (), parenttype) == 0)) &&
+                exttype->getMemberByName (errtok, nullptr, name, memstruct_r, memfuncdecl_r, memvardecl_r, memoffset_r, memindex_r)) {
             *memoffset_r += offset;
             *memindex_r  += index;
             return true;
@@ -811,37 +838,32 @@ void StructType::genInitFunc ()
     if (initfuncdecl == nullptr) return;
     if (initfuncdecl->getFuncBody () != nullptr) return;
 
-    Token *token = getDefTok ();
-    char const *tokfile = token->getFile ();
-    int         tokline = token->getLine ();
-    int         tokcoln = token->getColn ();
-
     // push tokens for init function source in reverse order
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CBRACE));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "pointer"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_RETURN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "pointer"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_RETURN));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CBRACE));
 
     if (hasconstructor) {
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "__ctor"));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_POINT));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "__ctor"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_POINT));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
     }
 
     if (vtabletype != nullptr) {
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "vtablep"));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_EQUAL));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "__vtableptr"));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_POINT));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "vtablep"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_EQUAL));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "__vtableptr"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_POINT));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
     }
 
     // output code to initialize inherited structs
@@ -850,50 +872,50 @@ void StructType::genInitFunc ()
     // likewise for implicit casting of the vtable pointer
     for (StructType *exttype : exttypes) {
         if (exttype->initfuncdecl != nullptr) {
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, "vtablep"));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_COMMA));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, "vtablep"));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_COMMA));
             NumValue nvone;
             nvone.u = 1;
-            pushtoken (new NumToken (tokfile, tokline, tokcoln, NC_UINT, nvone));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_COMMA));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, "__init"));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_COLON2));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, exttype->getName ()));
+            pushtoken (new NumToken (__FILE__, __LINE__, 0, NC_UINT, nvone));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_COMMA));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, "__init"));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_COLON2));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, exttype->getName ()));
         }
     }
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_PLUS));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "pointer"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_EQUAL));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_STAR));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, this->getName ()));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_PLUS));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "pointer"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_EQUAL));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_STAR));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, this->getName ()));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OBRACE));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_PLUSPLUS));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "numelem"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_LTANG));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_PLUSPLUS));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "numelem"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_LTANG));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
     NumValue nvzero;
     nvzero.u = 0;
-    pushtoken (new NumToken (tokfile, tokline, tokcoln, NC_UINT, nvzero));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_EQUAL));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, sizetype->getName ()));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_FOR));
+    pushtoken (new NumToken (__FILE__, __LINE__, 0, NC_UINT, nvzero));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_EQUAL));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, sizetype->getName ()));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_FOR));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OBRACE));
 
     initfuncdecl->parseFuncBody ();
 
@@ -964,15 +986,15 @@ bool StructType::getVTableLabel (Token *errtok, tsize_t lowoffs, tsize_t highoff
 //  output:
 //   returns pointer to scalar or first array element
 /*
-    structtype *structtype::__term (structtype *pointer, __size_t numelem)
+    void *structtype::__term (__size_t numelem)
     {
         for (__size_t i = 0; i < numelem; i ++) {
-            structtype *s = pointer + i;
+            structtype *s = this + i;
             for (__size_t j = 0; j < s->exttypes.size (); j ++)
-                    exttype::__term (s, 1);
+                    s->exttype::__term (1);
             if (hasdestructor) s->__dtor ();
         }
-        return pointer;
+        return (void *) this;
     }
 */
 void StructType::genTermFunc ()
@@ -980,76 +1002,75 @@ void StructType::genTermFunc ()
     if (termfuncdecl == nullptr) return;
     if (termfuncdecl->getFuncBody () != nullptr) return;
 
-    Token *token = getDefTok ();
-    char const *tokfile = token->getFile ();
-    int         tokline = token->getLine ();
-    int         tokcoln = token->getColn ();
-
     // push tokens for term function source in reverse order
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CBRACE));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "pointer"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_RETURN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "this"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_STAR));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "void"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_RETURN));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CBRACE));
 
     if (hasdestructor) {
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "__dtor"));
-        pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_POINT));
-        pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "__dtor"));
+        pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_POINT));
+        pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
     }
 
     // output code to terminate inherited structs
     // implicit casting of the pointer to rootward type adds the offset as part of the implicit cast
     for (StructType *exttype : exttypes) {
         if (exttype->termfuncdecl != nullptr) {
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
             NumValue nvone;
             nvone.u = 1;
-            pushtoken (new NumToken (tokfile, tokline, tokcoln, NC_UINT, nvone));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_COMMA));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, "__term"));
-            pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_COLON2));
-            pushtoken (new SymToken (tokfile, tokline, tokcoln, exttype->getName ()));
+            pushtoken (new NumToken (__FILE__, __LINE__, 0, NC_UINT, nvone));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, "__term"));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_COLON2));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, exttype->getName ()));
+            pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_POINT));
+            pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
         }
     }
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_PLUS));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "pointer"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_EQUAL));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "s"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_STAR));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, this->getName ()));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_PLUS));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "this"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_EQUAL));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "s"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_STAR));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, this->getName ()));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OBRACE));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_CPAREN));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_PLUSPLUS));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "numelem"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_LTANG));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_SEMI));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_CPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_PLUSPLUS));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "numelem"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_LTANG));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_SEMI));
     NumValue nvzero;
     nvzero.u = 0;
-    pushtoken (new NumToken (tokfile, tokline, tokcoln, NC_UINT, nvzero));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_EQUAL));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, "i"));
-    pushtoken (new SymToken (tokfile, tokline, tokcoln, sizetype->getName ()));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OPAREN));
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_FOR));
+    pushtoken (new NumToken (__FILE__, __LINE__, 0, NC_UINT, nvzero));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_EQUAL));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, "i"));
+    pushtoken (new SymToken (__FILE__, __LINE__, 0, sizetype->getName ()));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OPAREN));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_FOR));
 
-    pushtoken (new KwToken  (tokfile, tokline, tokcoln, KW_OBRACE));
+    pushtoken (new KwToken  (__FILE__, __LINE__, 0, KW_OBRACE));
 
     termfuncdecl->parseFuncBody ();
 }

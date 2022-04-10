@@ -19,10 +19,9 @@
 //    http://www.gnu.org/licenses/gpl-2.0.html
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "fdfile.h"
 
 struct MALFILE : FILE {
     virtual int put (char const *buf, int len);

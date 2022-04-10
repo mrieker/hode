@@ -68,7 +68,6 @@ struct FILE {
 
     virtual int put (char const *buf, int len);
 
-    virtual void free ();
     virtual int close ();
     virtual int read (char *buff, int size);
     virtual int write (char *buff, int size);

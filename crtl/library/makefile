@@ -110,6 +110,7 @@ LIBC = \
 	sprintf.hode.o \
 	start.hode.o \
 	stdio.hode.o \
+	strdup.hode.o \
 	strerror.hode.o \
 	strtod.hode.o \
 	strtof.hode.o \

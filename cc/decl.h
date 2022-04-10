@@ -97,6 +97,7 @@ struct ValDecl : Decl {
 
     Type *getType () { return type; }
     Keywd getStorClass () { return storclass; }
+    void setStorClass (Keywd sc) { storclass = sc; }
 
     virtual ValDecl *castValDecl () { return this; }
     virtual Type *getEquivType () { return (storclass == KW_TYPEDEF) ? type : nullptr; }
@@ -336,7 +337,7 @@ struct Type : Decl {
     virtual bool isLeafwardOf (Type *roottype, tsize_t *offset_r) { return false; }
     virtual bool isAbstract (Token *errtok, StructType *childtype) { return false; }
     virtual Expr *callInitFunc (Scope *scope, Token *token, Expr *mempointer) { return mempointer; }
-    virtual Expr *callTermFunc (Scope *scope, Token *token, Expr *mempointer) { return mempointer; }
+    virtual Expr *callTermFunc (Scope *scope, Token *token, Expr *mempointer, bool arrstyle) { return mempointer; }
     virtual void gatherThrowSubIDs (Token *errtok, std::vector<std::pair<char const *,tsize_t>> *subtypeids, tsize_t offset) { }
 
     virtual void dumpdecl ();
@@ -413,15 +414,16 @@ struct StructType : Type {
     bool isDefined () { return variables != nullptr; }
     bool getUnyun () { return unyun; }
     MemberScope *getMemScope () { return memscope; }
+    bool hasinitfunc () { return initfuncdecl != nullptr; }
     virtual tsize_t getTypeAlign (Token *errtok);
     virtual tsize_t getTypeSize  (Token *errtok);
     virtual bool isLeafwardOf (Type *roottype, tsize_t *offset_r);
     virtual Expr *callInitFunc (Scope *scope, Token *token, Expr *mempointer);
-    virtual Expr *callTermFunc (Scope *scope, Token *token, Expr *mempointer);
+    virtual Expr *callTermFunc (Scope *scope, Token *token, Expr *mempointer, bool arrstyle);
     virtual bool isAbstract (Token *errtok, StructType *childtype);
     virtual void gatherThrowSubIDs (Token *errtok, std::vector<std::pair<char const *,tsize_t>> *subtypeids, tsize_t offset);
     tsize_t getNumMembers ();
-    bool getMemberByName (Token *errtok, char const *name, StructType **memstruct_r, FuncDecl **memfuncdecl_r, VarDecl **memvardecl_r, tsize_t *memoffset_r, tsize_t *memindex_r);
+    bool getMemberByName (Token *errtok, char const *parenttype, char const *name, StructType **memstruct_r, FuncDecl **memfuncdecl_r, VarDecl **memvardecl_r, tsize_t *memoffset_r, tsize_t *memindex_r);
     bool getMemberByIndex (Token *errtok, tsize_t index, StructType **memstruct_r, VarDecl **memvardecl_r, tsize_t *memoffset_r);
     tsize_t getMemberOffset (Token *errtok, char const *name);  // assert fails if not found
     void setMembers (MemberScope *memscope, std::vector<FuncDecl *> *funcs, std::vector<VarDecl *> *vars);

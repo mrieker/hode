@@ -28,7 +28,6 @@ struct FDFILE : FILE {
 
     FDFILE ();
 
-    virtual void free ();
     virtual int close ();
     virtual int read (char *buff, int size);
     virtual int write (char *buff, int size);

@@ -242,7 +242,7 @@ static void extendmemory (__size_t extendby)
         }
     }
 
-    ass_putstr ("malloc*: endinitted="); ass_putptr (endinitted); ass_putstr (" extendby="); ass_putuinthex (extendby); ass_putchr ('\n');
+    //ass_putstr ("malloc*: endinitted="); ass_putptr (endinitted); ass_putstr (" extendby="); ass_putuinthex (extendby); ass_putchr ('\n');
 
     // make the extension look like an allocated block
     Block *block = endinitted;

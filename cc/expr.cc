@@ -183,6 +183,7 @@ MFuncExpr::MFuncExpr (Scope *exprscope, Token *exprtoken)
     ptrexpr   = nullptr;
     memstruct = nullptr;
     memfunc   = nullptr;
+    ignvirt   = false;
 }
 
 Type *MFuncExpr::getType ()
