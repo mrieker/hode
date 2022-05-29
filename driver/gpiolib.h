@@ -30,7 +30,7 @@
 
 struct Shadow;
 
-#define DEFCPUHZ 473000
+#define DEFCPUHZ 472000
 
 #define G_CLK         0x4   // GPIO[02]   out: send clock signal to cpu
 #define G_RESET       0x8   // GPIO[03]   out: send reset signal to cpu
@@ -211,6 +211,7 @@ struct PhysLib : GpioLib {
 private:
     bool is2711;
     bool nopads;
+    int memfd;
     IOWKIT_HANDLE iowhandles[4];
     sigset_t allowedsigs;
     struct timespec hafcycts;
@@ -223,6 +224,7 @@ private:
     uint32_t vals[4];
     uint32_t writecount;
     uint64_t writecycles;
+    void *memptr;
 
     void ctor (uint32_t cpuhz, bool nopads);
     uint32_t readconblocked (IOW56Con c, IOWKIT_HANDLE iowh);

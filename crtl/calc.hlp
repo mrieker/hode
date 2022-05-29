@@ -6,13 +6,14 @@ numbers:
         j           real is zero, imaginary is 1
         j2          real is zero, imaginary is 2
         3j4         real is 3, imaginary is 4
+        deg 5@30    real is 4.33, imaginary is 2.5
     numeric parts (real or imaginary) can be any
     double precision number, eg, 3, 3.4, 3.45e-6,
     -3.45e6, .7
 
 input line format:
     by default, after doing a computation, the result is saved in a numbered register
-    such as $0, $3, etc, and can be recalled by using that name in place of a number,
+    such as $1, $3, etc, and can be recalled by using that name in place of a number,
     eg, 3*$6
 
     results may be stored in a named variable by specifying the variable at beginning
@@ -22,7 +23,9 @@ input line format:
     arithmetic expressions using
         + -         addition, subtraction (lowest precedence)
         * /         multiplication, division
-        ** //       exponentiation, logarithm (highest precedence)
+        ** //       exponentiation, logarithm
+        @           complex composition from magnitude @ argument (highest precedence)
+                        shorthand for (re magnitude * cos re argument) + j * (re magnitude * sin re argument)
 
     use ( ) to alter precedence in usual way, eg,
         3+4*5+6     gives 29
@@ -53,7 +56,7 @@ input line format:
                     eg, deg sin 90 gives 1
 
         rad     causes all subsequent angles passed to cos, sin, tan to be assumed in radians
-                    and all angke values computed by acos, arg, asin, atan to be in radians
+                    and all angle values computed by acos, arg, asin, atan to be in radians
                     eg, rad cos (pi/3) gives 0.5
 
     commands can be given on input line by themselves:

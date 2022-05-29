@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 ;
 ; complement quadword
 ;  input:
@@ -29,6 +27,8 @@
 ;  output:
 ;   R0,R4,R5 = as on input
 ;   R1,R2,R3 = trashed
+;
+	.align	2
 	.global	__com_QQ
 __com_QQ:
 	ldw	%r2,0(%r1)
@@ -44,4 +44,3 @@ __com_QQ:
 	com	%r2,%r2
 	stw	%r2,6(%r0)
 	lda	%pc,0(%r3)
-

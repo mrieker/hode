@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 ;
 ; compare two quadwords
 ;  input:
@@ -100,4 +98,3 @@ cmp_qq_zero:
 	ldw	%r5,-60(%r6)
 	lda	%r6,6(%r6)
 	lda	%pc,0(%r3)
-

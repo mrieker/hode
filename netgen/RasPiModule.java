@@ -750,8 +750,8 @@ public class RasPiModule extends Module {
                 appendsim (sb, simtime, zhis.mword);     // cpu telling raspi to transfer word not byte
                 appendsim (sb, 2, zhis.forcev >> 21);    // echo dena[22],qena[21] back
                 appendsim (sb, simtime, zhis.irq);       // echo irq back
-                if (((zhis.forcev >> (21 + 32)) & 1) != 0) {
-                    appendsim (sb, simtime, zhis.mq);    // cpu passing raspi mem addr or data
+                if (((zhis.forcev >> (21 + 32)) & 1) == 0) {
+                    appendsim (sb, simtime, zhis.mq);    // cpu passing raspi mem addr or data to raspi
                 } else {
                     appendsim (sb, simtime, zhis.md);    // echo md back
                 }

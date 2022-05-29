@@ -35,6 +35,7 @@
  *      -randmem    : supply random opcodes and data for testing
  *      -sim        : simulate via pipe connected to NetGen
  *      -stopat     : stop simulating when accessing the address
+ *      -tclhex     : tcl assembler generated hex file format
  */
 
 #include <errno.h>
@@ -43,6 +44,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <sched.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -150,7 +152,8 @@ static void writememflt  (uint32_t addr, float    val);
 static void *getmemptr (uint32_t addr, uint32_t size, bool write);
 static char const *getmemstr (uint32_t addr);
 static void shadowcheck (uint32_t sample);
-static void restorestdinattrs ();
+static void sighandler (int signum);
+static void exithandler ();
 
 int main (int argc, char **argv)
 {
@@ -159,6 +162,7 @@ int main (int argc, char **argv)
     bool nohw = false;
     bool oddok = false;
     bool randmem = false;
+    bool tclhex = false;
     char const *loadname = NULL;
     char const *simname = NULL;
     char *p;
@@ -232,6 +236,10 @@ int main (int argc, char **argv)
             }
             continue;
         }
+        if (strcasecmp (argv[i], "-tclhex") == 0) {
+            tclhex = true;
+            continue;
+        }
         if (argv[i][0] == '-') {
             fprintf (stderr, "raspictl: unknown option %s\n", argv[i]);
             return 1;
@@ -262,21 +270,30 @@ int main (int argc, char **argv)
         char loadline[144], *p;
         while (fgets (loadline, sizeof loadline, loadfile) != NULL) {
             uint32_t addr = strtoul (loadline, &p, 16);
-            if (*(p ++) != ':') {
-                fprintf (stderr, "raspictl: bad loadfile line %s", loadline);
-                return 1;
-            }
-            while (*p != '\n') {
-                int data = twohexchars (p);
-                if ((data < 0) || (addr >= sizeof memory)) {
-                    fprintf (stderr, "raspictl: bad loadfile line %s", loadline);
-                    return 1;
+            if (tclhex) {
+                if ((*(p ++) != ' ') || (addr >= sizeof memory) || (addr & 7) || (p[16] != '\n')) goto badload;
+                for (int i = 8; -- i >= 0;) {
+                    int data = twohexchars (p);
+                    if (data < 0) goto badload;
+                    memory[addr+i] = data;
+                    p += 2;
                 }
-                memory[addr++] = data;
-                p += 2;
+            } else {
+                if (*(p ++) != ':') goto badload;
+                while (*p != '\n') {
+                    int data = twohexchars (p);
+                    if ((data < 0) || (addr >= sizeof memory)) goto badload;
+                    memory[addr++] = data;
+                    p += 2;
+                }
             }
         }
         fclose (loadfile);
+        goto goodload;
+    badload:;
+        fprintf (stderr, "raspictl: bad loadfile line %s", loadline);
+        return 1;
+    goodload:;
     }
 
     if (mintimes) {
@@ -286,14 +303,22 @@ int main (int argc, char **argv)
         pthread_detach (pid);
     }
 
+    // make sure we undo termios on exit
+    signal (SIGHUP,  sighandler);
+    signal (SIGINT,  sighandler);
+    signal (SIGTERM, sighandler);
+
     // access cpu circuitry
     // either physical circuit via gpio pins
     // ...or netgen simulator via pipes
     // ...or nothing but shadow
     gpio = (simname != NULL) ? (GpioLib *) new PipeLib (simname) :
                             (nohw ? (GpioLib *) new NohwLib (&shadow) :
-                                        (GpioLib *) new PhysLib (cpuhz, ~ shadow.chkacid));
+                                        (GpioLib *) new PhysLib (cpuhz, ! shadow.chkacid));
     gpio->open ();
+
+    // close gpio on exit
+    atexit (exithandler);
 
     // reset CPU circuit for a couple cycles
     gpio->writegpio (false, G_RESET);
@@ -913,7 +938,6 @@ static void mw_syscall (uint32_t sample, uint16_t data)
                     break;
                 }
                 savedtermioss[fd] = ttyattrs;
-                if (fd == 0) atexit (restorestdinattrs);
             } else {
                 ttyattrs = savedtermioss[fd];
             }
@@ -1207,10 +1231,21 @@ static void shadowcheck (uint32_t sample)
     if (shadow.clock (mq, irq)) abort ();
 }
 
-// terminated, maybe turn stdin echo back on
-static void restorestdinattrs ()
+// signal that terminates process, do exit() so exithandler() gets called
+static void sighandler (int signum)
 {
+    fprintf (stderr, "raspictl: terminated for signal %d\n", signum);
+    exit (1);
+}
+
+// exiting
+static void exithandler ()
+{
+    // maybe turn stdin echo back on
     if (savedtermioss.count (0) != 0) {
         tcsetattr (0, TCSANOW, &savedtermioss[0]);
     }
+
+    // close gpio access
+    gpio->close ();
 }

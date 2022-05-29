@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 ;
 ; divide
 ;  input:
@@ -134,4 +132,3 @@ div_QQL_next:
 	ldw	%r5,sav5(%r6)
 	lda	%r6,size(%r6)
 	lda	%pc,0(%r3)
-

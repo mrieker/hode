@@ -18,10 +18,7 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
-
 	.global	isfinite
 isfinite:
 	clr	%r0
@@ -35,4 +32,3 @@ notfin:
 	lda	%r6,8(%r6)
 	lda	%pc,0(%r3)
 isfin_7FF0: .word 0x7FF0
-

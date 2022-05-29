@@ -21,6 +21,7 @@ LIBA = \
 	div_QQL.hode.o \
 	div_QQQ.hode.o \
 	div_QQW.hode.o \
+	div_www.hode.o \
 	div_wwW.hode.o \
 	div_WWW.hode.o \
 	endtags.hode.o \
@@ -48,11 +49,14 @@ LIBA = \
 	memmove.hode.o \
 	memset.hode.o \
 	mod_WQW.hode.o \
+	mod_www.hode.o \
 	mod_wwW.hode.o \
 	mod_WWW.hode.o \
 	mul_LLL.hode.o \
 	mul_llw.hode.o \
 	mul_LLW.hode.o \
+	mul_LWL.hode.o \
+	mul_www.hode.o \
 	mul_wwW.hode.o \
 	mul_WWW.hode.o \
 	neg_QQ.hode.o \
@@ -103,6 +107,7 @@ LIBC = \
 	dprintf.hode.o \
 	fdfile.hode.o \
 	fprintf.hode.o \
+	gmtime.hode.o \
 	malloc.hode.o \
 	$(patsubst math_%.c,mathd%.hode.o,$(wildcard math_*.c)) \
 	$(patsubst math_%.c,mathf%.hode.o,$(wildcard math_*.c)) \
@@ -116,6 +121,7 @@ LIBC = \
 	strtof.hode.o \
 	strtol.hode.o \
 	strtoul.hode.o \
+	time.hode.o \
 	vfprintf.hode.o \
 	vfprintf_fp.hode.o \
 

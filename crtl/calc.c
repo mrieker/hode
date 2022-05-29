@@ -207,7 +207,7 @@ int main (int argc, char **argv)
                     if (compute (&var->valu)) {
                         userdef = var;
                     } else {
-                        ////delete var;
+                        delete var;
                     }
                 } else {
 
@@ -219,7 +219,7 @@ int main (int argc, char **argv)
                         uint parmnamelen = skipvarname ();
                         if (parmnamelen == 0) {
                             fprintf (stderr, "invalid param name <%s>\n", parmname);
-                            ////delete func;
+                            delete func;
                             goto nextline;
                         }
                         Parm *parm = malloc (parmnamelen + sizeof *parm);
@@ -245,7 +245,7 @@ int main (int argc, char **argv)
                     for (UserDef **lud = &userdefs; (ud = *lud) != NULL;) {
                         if (strcmp (ud->name, userdef->name) == 0) {
                             *lud = ud->next;
-                            ////delete ud;
+                            delete ud;
                         } else {
                             lud = &ud->next;
                         }
@@ -321,34 +321,41 @@ ComplexD opmul (ComplexD left, ComplexD rite) { return left.mul (rite); }
 ComplexD opdiv (ComplexD left, ComplexD rite) { return left.div (rite); }
 ComplexD oppow (ComplexD left, ComplexD rite) { return left.pow (rite); }
 ComplexD oplog (ComplexD left, ComplexD rite) { return rite.log ().div (left.log ()); }
+ComplexD opang (ComplexD left, ComplexD rite) { double a = rite.real * d2r; return ComplexD::make (left.real * cos (a), left.real * sin (a)); }
 
 Op const optabl0[] = {
     { "+",  opadd },
     { "-",  opsub },
-    { "",   NULL }
+    { "",   NULL  }
 };
 
 Op const optabl1[] = {
     { "*",  opmul },
     { "/",  opdiv },
-    { "",   NULL }
+    { "",   NULL  }
 };
 
 Op const optabl2[] = {
     { "**", oppow },
     { "//", oplog },
-    { "",   NULL }
+    { "",   NULL  }
 };
 
-#define NPRECED 3
-Op const *const optabls[NPRECED] = { optabl0, optabl1, optabl2 };
+Op const optabl3[] = {
+    { "@",  opang },
+    { "",   NULL  }
+};
+
+#define NPRECED 4
+Op const *const optabls[NPRECED] = { optabl0, optabl1, optabl2, optabl3 };
 
 // evaluate expression from input string
 //  input:
 //   lineptr = points to input string
-//   preced = 0: handle +,-,*,/,**
-//            1: handle *,/,**, stop on +,-
-//            2: handle **, stop on +,-,*,/
+//   preced = 0: handle +,-,*,/,**,//,@
+//            1: handle *,/,**,//,@, stop on +,-
+//            2: handle **,//,@, stop on +,-,*,/
+//            3: handle @, stop on +,-,*,/,**,//
 //  output:
 //   returns expression value
 //   lineptr = updated past string evaluated
@@ -646,7 +653,9 @@ void printval (ComplexD const *val)
     } else if (val->real == 0.0) {
         lprintf (stdout, "j %.16lg\n", val->imag);
     } else {
-        lprintf (stdout, "%.16lg j %.16lg\n", val->real, val->imag);
+        lprintf (stdout, "%.16lg j %.16lg = %.16lg @ %s %.16lg\n",
+                val->real, val->imag, val->abs (),
+                (r2d == 1.0) ? "rad" : "deg", val->arg () * r2d);
     }
 }
 

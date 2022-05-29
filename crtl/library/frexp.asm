@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
 
 ; double frexp (double x, int *exp)
@@ -100,4 +98,3 @@ frexp_subloop:
 	ldw	%r0,#0x3FE0		; insert biased exponent in double
 	or	%r5,%r5,%r0
 	br	frexp_retexp
-

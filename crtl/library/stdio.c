@@ -39,13 +39,17 @@ FILE *fdopen (int fd, char const *mode)
 FILE *fopen (char const *path, char const *mode)
 {
     int flags = 0;
-    switch (mode[0]) {
-        case 'a': flags = O_APPEND | O_CREAT | O_WRONLY; break;
-        case 'r': flags = O_RDONLY; break;
-        case 'w': flags = O_CREAT | O_TRUNC | O_WRONLY; break;
-        default: {
-            errno = EINVAL;
-            return NULL;
+    for (char c; (c = *mode) != 0; mode ++) {
+        switch (c) {
+            case 'a': flags = O_APPEND | O_CREAT | O_WRONLY; break;
+            case 'b': break;
+            case 'r': flags = O_RDONLY; break;
+            case 'w': flags = O_CREAT | O_TRUNC | O_WRONLY; break;
+            case '+': flags = (flags & ~ O_ACCMODE) | O_RDWR; break;
+            default: {
+                errno = EINVAL;
+                return NULL;
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 *~
 *.FCStd1
 *.a
+*.armv6l
 *.armv7l
 *.*bak*
 *.hex
@@ -21,6 +22,12 @@
 .nfs*
 baseshunt
 classes
+de0/.qsys_edit
+de0/db
+de0/*.rpt
+de0/incremental_db
+de0/output_files
+de0/simulation/modelsim
 driver/km/*.ko
 driver/km/*.mod.c
 driver/km/*.o
@@ -34,6 +41,7 @@ jacl141
 jaclBinary141.zip
 kicad
 raspictl.readcounts
+!de0/simulation/modelsim/testde0.do
 !goodpcbs/*.net
 !goodpcbs/*.pcb
 !goodpcbs/*.png

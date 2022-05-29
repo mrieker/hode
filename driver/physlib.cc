@@ -20,8 +20,9 @@
 
 // access physical cpu boards
 // assumes raspberry pi gpio connector is plugged into rasboard
-// ...and iow56paddles are plugged into the 4 bus connectors
+// ...optionally iow56paddles are plugged into the 4 bus connectors
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,6 +65,9 @@ PhysLib::PhysLib (uint32_t cpuhz, bool nopads)
 
 void PhysLib::ctor (uint32_t cpuhz, bool nopads)
 {
+    this->memfd  = -1;
+    this->memptr = NULL;
+
     sigemptyset (&sigintmask);
     sigaddset (&sigintmask, SIGINT);
     sigaddset (&sigintmask, SIGTERM);
@@ -72,16 +76,15 @@ void PhysLib::ctor (uint32_t cpuhz, bool nopads)
     this->nopads = nopads;
 
     memset (&hafcycts, 0, sizeof hafcycts);
-    hafcycts.tv_nsec = 500000000 / cpuhz;
-    printf ("PhysLib::ctor: cpuhz=%u hafcycns=%u\n", cpuhz, (uint32_t) hafcycts.tv_nsec);
+    if (cpuhz > 0) hafcycts.tv_nsec = 500000000 / cpuhz;
+    fprintf (stderr, "PhysLib::ctor: cpuhz=%u hafcycns=%u\n", cpuhz, (uint32_t) hafcycts.tv_nsec);
 }
 
 void PhysLib::open ()
 {
     char cpubuff[80];
-    int memfd;
     FILE *cpufile;
-    void *memptr;
+    struct flock flockit;
 
     // access gpio page in physical memory
     memfd = ::open ("/dev/gpiomem", O_RDWR | O_SYNC);
@@ -89,12 +92,27 @@ void PhysLib::open ()
         fprintf (stderr, "PhysLib::open: error opening /dev/gpiomem: %m\n");
         goto nogpio;
     }
+
+trylk:;
+    memset (&flockit, 0, sizeof flockit);
+    flockit.l_type   = F_WRLCK;
+    flockit.l_whence = SEEK_SET;
+    flockit.l_len    = 4096;
+    if (fcntl (memfd, F_SETLK, &flockit) < 0) {
+        if (((errno == EACCES) || (errno == EAGAIN)) && (fcntl (memfd, F_GETLK, &flockit) >= 0)) {
+            if (flockit.l_type == F_UNLCK) goto trylk;
+            fprintf (stderr, "PhysLib::open: error locking /dev/gpiomem: locked by pid %d\n", (int) flockit.l_pid);
+            abort ();
+        }
+        fprintf (stderr, "PhysLib::open: error locking /dev/gpiomem: %m\n");
+        abort ();
+    }
+
     memptr = mmap (NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, 0);
     if (memptr == MAP_FAILED) {
         fprintf (stderr, "PhysLib::open: error mmapping /dev/gpiomem: %m\n");
         abort ();
     }
-    ::close (memfd);
 
     // save pointer to gpio register page
     gpiopage = (uint32_t volatile *) memptr;
@@ -153,55 +171,64 @@ nogpio:;
 gotcpu:;
     fclose (cpufile);
 
-    double tclk = 1.0 / cpuhz;  // time from one clock up to next clock up
-    double tphl = 0.000000040;  // time from GPIO[02] going high to C_CLK2 going low
-    double tplh = 0.000000120;  // time from GPIO[02] going low to C_CLK2 going high
+    // zero means run as fast as you can (ie, connected to de0 fpga)
+    if (cpuhz > 0) {
 
-    // if hafcychi = hafcyclo, the resultant C_CLK2 would have a long low time and a short high time
-    // so we must shorten hafcyclo so C_CLK2 will spemd less time being low
-    // ...and lengthen hafcychi so C_CLK2 will spend more time being high
+        double tclk = 1.0 / cpuhz;  // time from one clock up to next clock up
+        double tphl = 0.000000040;  // time from GPIO[02] going high to C_CLK2 going low
+        double tplh = 0.000000120;  // time from GPIO[02] going low to C_CLK2 going high
 
-    // suppose we just cleared G_CLK (gpiovalu & G_CLK == 0),
-    // so we just drove GPIO[02] high, meaning C_CLK2 is going low in tphl
+        // if hafcychi = hafcyclo, the resultant C_CLK2 would have a long low time and a short high time
+        // so we must shorten hafcyclo so C_CLK2 will spemd less time being low
+        // ...and lengthen hafcychi so C_CLK2 will spend more time being high
 
-    // in tgpio2hi from now, we will set G_CLK (gpiovalu & G_CLK != 0),
-    // so we will drive GPIO[02] low, meaning C_CLK2 will go high tplh from then
+        // suppose we just cleared G_CLK (gpiovalu & G_CLK == 0),
+        // so we just drove GPIO[02] high, meaning C_CLK2 is going low in tphl
 
-    // time GPIO2 goes low to high: tgpio2lotohi = just now
-    // time CCLK2 goes high to low: tcclk2hitolo = tgpio2lotohi + tphl
-    // time GPIO2 goes high to low: tgpio2hitolo = tgpio2lotohi + tgpio2hi
-    // time CCLK2 goes low to high: tcclk2lotohi = tgpio2hitolo + tplh
+        // in tgpio2hi from now, we will set G_CLK (gpiovalu & G_CLK != 0),
+        // so we will drive GPIO[02] low, meaning C_CLK2 will go high tplh from then
 
-    // time CCLK2 is low:  tcclk2lo = tcclk2lotohi - tcclk2hitolo
-    // time CCLK2 is high: tcclk2hi = tclk - tcclk2lo
+        // time GPIO2 goes low to high: tgpio2lotohi = just now
+        // time CCLK2 goes high to low: tcclk2hitolo = tgpio2lotohi + tphl
+        // time GPIO2 goes high to low: tgpio2hitolo = tgpio2lotohi + tgpio2hi
+        // time CCLK2 goes low to high: tcclk2lotohi = tgpio2hitolo + tplh
 
-    // compute tgpio2hi, tgpio2lo such that:
-    //  tgpio2hi + tgpio2lo = tclk      whole period is given frequency
-    //  tcclk2lo = tcclk2hi             C_CLK2 is symmetrical
+        // time CCLK2 is low:  tcclk2lo = tcclk2lotohi - tcclk2hitolo
+        // time CCLK2 is high: tcclk2hi = tclk - tcclk2lo
 
-    //  tcclk2lo = tcclk2hi
-    //  tcclk2lo = tclk - tcclk2lo
-    //  tcclk2lo = tclk / 2
-    //  tcclk2lotohi - tcclk2hitolo = tclk / 2
-    //  (tgpio2hitolo + tplh) - (tgpio2lotohi + tphl) = tclk / 2
-    //  (tgpio2lotohi + tgpio2hi + tplh) - (tgpio2lotohi + tphl) = tclk / 2
-    //  (tgpio2hi + tplh) - (tphl) = tclk / 2
-    //  (tgpio2hi + tplh) = tclk / 2 + tphl
-    //  tgpio2hi = tclk / 2 + tphl - tplh
+        // compute tgpio2hi, tgpio2lo such that:
+        //  tgpio2hi + tgpio2lo = tclk      whole period is given frequency
+        //  tcclk2lo = tcclk2hi             C_CLK2 is symmetrical
 
-    double tgpio2hi = tclk / 2 + tphl - tplh;   // time GPIO[02] is high = time G_CLK is low = shorter than half
-    double tgpio2lo = tclk / 2 + tplh - tphl;   // time GPIO[02] is low = time G_CLK is high = longer than half
+        //  tcclk2lo = tcclk2hi
+        //  tcclk2lo = tclk - tcclk2lo
+        //  tcclk2lo = tclk / 2
+        //  tcclk2lotohi - tcclk2hitolo = tclk / 2
+        //  (tgpio2hitolo + tplh) - (tgpio2lotohi + tphl) = tclk / 2
+        //  (tgpio2lotohi + tgpio2hi + tplh) - (tgpio2lotohi + tphl) = tclk / 2
+        //  (tgpio2hi + tplh) - (tphl) = tclk / 2
+        //  (tgpio2hi + tplh) = tclk / 2 + tphl
+        //  tgpio2hi = tclk / 2 + tphl - tplh
 
-    hafcychi = (sint64_t) (rasphz * tgpio2lo);  // cycles G_CLK is high
-    hafcyclo = (sint64_t) (rasphz * tgpio2hi);  // cycles G_CLK is low
-    printf ("PhysLib::open: hafcychi=%u hafcyclo=%u\n", hafcychi, hafcyclo);
+        double tgpio2hi = tclk / 2 + tphl - tplh;   // time GPIO[02] is high = time G_CLK is low = shorter than half
+        double tgpio2lo = tclk / 2 + tplh - tphl;   // time GPIO[02] is low = time G_CLK is high = longer than half
+
+        hafcychi = (sint64_t) (rasphz * tgpio2lo);  // cycles G_CLK is high
+        hafcyclo = (sint64_t) (rasphz * tgpio2hi);  // cycles G_CLK is low
+    } else {
+        hafcychi = 0;
+        hafcyclo = 0;
+    }
+    fprintf (stderr, "PhysLib::open: hafcychi=%u hafcyclo=%u\n", hafcychi, hafcyclo);
 
     // initialize rdcyc()
     rdcycinit ();
 
     // open io-warrior-56 paddles plugged into a,c,i,d connectors
     // set all the outputs to 1s to open the open drain outputs so we can read the pins
-    if (! nopads) {
+    if (nopads) {
+        memset (iowhandles, 0, sizeof iowhandles);
+    } else {
         blocksigint ();
         uint16_t snb[9];
         IowKitOpenDevice ();
@@ -263,8 +290,12 @@ gotcpu:;
 void PhysLib::close ()
 {
     if (writecount > 0) {
-        printf ("PhysLib::close: writecount=%u avgcyclesperwrite=%u\n", writecount, (uint32_t) (writecycles / writecount));
+        fprintf (stderr, "PhysLib::close: writecount=%u avgcyclesperwrite=%u\n", writecount, (uint32_t) (writecycles / writecount));
     }
+    munmap (memptr, 4096);
+    ::close (memfd);
+    memptr = NULL;
+    memfd  = -1;
 }
 
 void PhysLib::halfcycle ()
@@ -273,7 +304,7 @@ void PhysLib::halfcycle ()
         uint32_t start = rdcyc ();
         uint32_t delta = (gpiovalu & G_CLK) ? hafcychi : hafcyclo;
         while (rdcyc () - start < delta) { }
-    } else {
+    } else if (cpuhz > 0) {
         nanosleep (&hafcycts, NULL);
     }
 }
@@ -339,7 +370,7 @@ void PhysLib::writegpio (bool wdata, uint32_t value)
         }
         if (lastretries < retries) {
             lastretries = retries;
-            printf ("PhysLib::writegpio: retries %u\n", retries);
+            fprintf (stderr, "PhysLib::writegpio: retries %u\n", retries);
         }
     }
 }

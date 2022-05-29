@@ -18,10 +18,7 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
-
 	.global	isnanf
 isnanf:
 	ldw	%r2,2-64(%r6)
@@ -41,4 +38,3 @@ notnanf:
 	clr	%r0
 	lda	%r6,4(%r6)
 	lda	%pc,0(%r3)
-

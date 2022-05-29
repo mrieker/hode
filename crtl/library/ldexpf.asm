@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
 
 ; float ldexpf (float x, int exp)
@@ -119,4 +117,3 @@ ldexpf_return:
 	ldw	%r3,ldexpf_sav3(%r6)
 	lda	%r6,8(%r6)
 	lda	%pc,0(%r3)
-

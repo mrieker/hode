@@ -10,4 +10,4 @@ then
 fi
 rm -f simpipe
 mknod simpipe p
-cat simpipe | ./master.sh -sim - | ../driver/raspictl -printstate -sim simpipe umul.hex
+cat simpipe | ./master.sh -sim - | ../driver/raspictl -printstate -sim simpipe -tclhex umul.hex

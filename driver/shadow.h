@@ -55,8 +55,10 @@ private:
     int rawcmid;
     int rawcout;
     int rawvout;
+    State states[8];
     uint16_t alu;
     uint16_t newpsw;
+    uint32_t samples[8];
     uint64_t cycle;
 
     State endOfInst (bool irq);

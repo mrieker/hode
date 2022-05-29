@@ -1,6 +1,9 @@
 #!/bin/bash
-cd `dirname $0`
-if ! lsmod | grep -q ^enabtsc
+if [ "`uname -m`" == armv7l ]
 then
-    sudo insmod km/enabtsc.ko
+    if ! lsmod | grep -q ^enabtsc
+    then
+        cd `dirname $0`
+        sudo insmod km/enabtsc.ko
+    fi
 fi

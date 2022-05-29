@@ -15,7 +15,7 @@ then
 fi
 if [ "$1" == "loop" ]
 then
-    cpuhz=473000
+    cpuhz=472000
     ##for ((cpuhz=480000; $cpuhz != 468000; cpuhz=$cpuhz-1000))
     ##do
         date >> randmem-$cpuhz.log

@@ -91,9 +91,9 @@
 
 #   Arith Function Codes
 #   --------------------
-#   0000   0  LSR     d = a >>> 1               NZVC
-#   0001   1  ASR     d = a >>  1               NZVC
-#   0010   2  CSR     d = a >>> 1 | C << 15     NZVC
+#   0000   0  LSR     d = a >>> 1               NZ0C
+#   0001   1  ASR     d = a >>  1               NZ0C
+#   0010   2  ROR     d = a >>> 1 | C << 15     NZ0C
 #   0011   3
 #   0100   4  MOV     d =   b                   NZ0
 #   0101   5  NEG     d = - b                   NZV

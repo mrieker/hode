@@ -18,10 +18,7 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
-
 	.global	fabsf
 fabsf:
 	ldw	%r1,-62(%r6)
@@ -31,4 +28,3 @@ fabsf:
 	lda	%r6,4(%r6)
 	lda	%pc,0(%r3)
 fabsf_7FFF: .word 0x7FFF
-

@@ -18,10 +18,7 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
-
 	.global	isinf
 isinf:
 	clr	%r0
@@ -39,4 +36,3 @@ isinf:
 notinf:
 	lda	%r6,8(%r6)
 	lda	%pc,0(%r3)
-

@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 	.align	2
 
 ; float frexpf (float x, int *exp)
@@ -85,4 +83,3 @@ frexpf_subloop:
 	ldw	%r2,#0x3F00		; insert biased exponent in float
 	or	%r1,%r1,%r2
 	br	frexpf_retexp
-

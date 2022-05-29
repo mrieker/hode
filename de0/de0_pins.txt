@@ -1,0 +1,80 @@
+
+
+    GPIO-0/JP1
+
+    GPIO_0_IN0  A8   1   2  D3  GPIO_0_0
+    GPIO_0_IN1  B8   3   4  C3  GPIO_0_1
+    GPIO_0_2    A2   5   6  A3  GPIO_0_3
+    GPIO_0_4    B3   7   8  B4  GPIO_0_5
+    GPIO_0_6    A4   9  10  B5  GPIO_0_7
+    VCC_SYS         11  12      GND
+    GPIO_0_8    A5  13  14  D5  GPIO_0_9
+    GPIO_0_10   B6  15  16  A6  GPIO_0_11
+    GPIO_0_12   B7  17  18  D6  GPIO_0_13
+    GPIO_0_14   A7  19  20  C6  GPIO_0_15
+    GPIO_0_16   C8  21  22  E6  GPIO_0_17
+    GPIO_0_18   E7  23  24  D8  GPIO_0_19
+    GPIO_0_20   E8  25  26  F8  GPIO_0_21
+    GPIO_0_22   F9  27  28  E9  GPIO_0_23
+    VCC_3P3         29  30      GND
+    GPIO_0_24   C9  31  32  D9  GPIO_0_25
+    GPIO_0_26   E11 33  34  E11 GPIO_0_27
+    GPIO_0_28   C11 35  36  B11 GPIO_0_29
+    GPIO_0_30   A12 37  38  D11 GPIO_0_31
+    GPIO_0_32   D12 39  40  B12 GPIO_0_33
+
+
+    GPIO-1/JP2                                                      RASPI
+
+            GPIO_1_IN0  T9   1   2  F13 GPIO_1_0    write           _qena   GPIO_21 40  39  GND
+            GPIO_1_IN1  R9   3   4  T15 GPIO_1_1    m[15]           intrq   GPIO_20 38  37  GPIO_26 write
+    _qena   GPIO_1_2    T14  5   6  T13 GPIO_1_3    m[09]           m[12]   GPIO_16 36  35  GPIO_19 m[15]
+    intrq   GPIO_1_4    R13  7   8  T12 GPIO_1_5    m[02]                   GND     34  33  GPIO_13 m[09]
+    m[12]   GPIO_1_6    R12  9  10  T11 GPIO_1_7    m[01]           m[08]   GPIO_12 32  31  GPIO_6  m[02]
+            VCC_SYS         11  12      GND                                 GND     30  29  GPIO_5  m[01]
+    m[08]   GPIO_1_8    T10 13  14  R11 GPIO_1_9                            ID_SC   28  27  ID_SD
+    m[03]   GPIO_1_10   P11 15  16  R10 GPIO_1_11                   m[03]   GPIO_7  26  25  GND
+    m[04]   GPIO_1_12   N12 17  18  P9  GPIO_1_13   m[07]           m[04]   GPIO_8  24  23  GPIO_11 m[07]
+    read    GPIO_1_14   N9  19  20  N11 GPIO_1_15   m[05]           read    GPIO_25 22  21  GPIO_9  m[05]
+            GPIO_1_16   L16 21  22  K16 GPIO_1_17   m[06]                   GND     20  19  GPIO_10 m[06]
+    halt    GPIO_1_18   R16 23  24  L15 GPIO_1_19   dena            halt    GPIO_24 18  17  3.3V
+    word    GPIO_1_20   P15 25  26  P16 GPIO_1_21   flag            word    GPIO_23 16  15  GPIO_22 dena
+            GPIO_1_22   R14 27  28  N16 GPIO_1_23   m[13]                   GND     14  13  GPIO_27 flag
+            VCC_3P3         29  30      GND                         m[14]   GPIO_18 12  11  GPIO_17 m[13]
+    m[14]   GPIO_1_24   N15 31  32  P14 GPIO_1_25                   m[11]   GPIO_15 10   9  GND
+    m[11]   GPIO_1_26   L14 33  34  N14 GPIO_1_27   m[00]           m[10]   GPIO_14  8   7  GPIO_4  m[00]
+    m[10]   GPIO_1_28   M10 35  36  L13 GPIO_1_29   reset                   GND      6   5  GPIO_3  reset
+            GPIO_1_30   J16 37  38  K15 GPIO_1_31   clock                   5V       4   3  GPIO_2  clock
+            GPIO_1_32   J13 39  40  J14 GPIO_1_33                           5V       2   1  3.3V
+
+
+
+
+
+
+                                         CLK    CS   RES   GND   3.3
+                                           *     *     *     *     *
+                                           6     7     8     9    10
+
+                                                    OLIMEX
+                                                  ENC28J60-H
+
+                                           5     4     3     2     1
+                                           *     *     *     *     *
+                                         INT   WOL    SO    SI   SCK
+
+
+
+
+                                      PIN_D9   E10   B11   D11   B12
+                                    GPIO_025   027   029   031   033
+                GND                GND   INT   CLK    CS   RES    COMRCV
+ 2               12                 30    32    34    36    38    40
+ *                *                  *     *     *     *     *     *
+
+ *                *                  *     *     *     *     *     *
+ 1               11                 29    31    33    35    37    39
+                +5V               +3.3   WOL    SO    SI   SCK    COMXMT
+                                    GPIO_024   026   028   030   032
+                                      PIN_C9   E11   C11   A12   D12
+

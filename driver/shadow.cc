@@ -33,6 +33,8 @@
 #define ARITHUPDATESPC 0
 #define LDxR7IMMINCSPC 0
 
+#define NSAMPLES (sizeof samples / sizeof samples[0])
+
 Shadow::Shadow ()
 {
     printinstr = false;
@@ -59,6 +61,9 @@ void Shadow::reset ()
 //   sample = what is on GPIO pins right now
 bool Shadow::check (uint32_t sample)
 {
+    states[cycle%NSAMPLES]  = state;
+    samples[cycle%NSAMPLES] = sample;
+
     // check the pin values based on what state we were in during the cycle that is ending
     switch (state) {
         case RESET0: {
@@ -363,6 +368,11 @@ bool Shadow::check (uint32_t sample)
                 fprintf (stderr, "Shadow::check: %c=missing\n", CONLETS[c]);
             }
         }
+        for (unsigned int i = 0; i < NSAMPLES; i ++) {
+            unsigned int j = (cycle + NSAMPLES - i) % NSAMPLES;
+            pins = samples[j];
+            fprintf (stderr, "Shadow::check: state=%-6s  sample=%08X %s\n", statestr (states[j]), pins, GpioLib::decocon (CON_G, pins).c_str ());
+        }
         puque ();
     }
 
@@ -535,7 +545,11 @@ bool Shadow::clock (uint16_t mq, bool irq)
         }
     }
 
+#if UNIPROC
+    cycle ++;
+#else
     __atomic_add_fetch (&cycle, 1, __ATOMIC_RELAXED);
+#endif
 
     if (printinstr | printstate) {
         switch (state) {
@@ -790,7 +804,11 @@ bool Shadow::clock (uint16_t mq, bool irq)
 
 uint64_t Shadow::getcycles ()
 {
+#if UNIPROC
+    return cycle;
+#else
     return __atomic_load_n (&cycle, __ATOMIC_RELAXED);
+#endif
 }
 
 // get what should be on GPIO connector right now, assuming hw has had time to settle in new state

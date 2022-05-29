@@ -18,8 +18,6 @@
 ;;
 ;;    http://www.gnu.org/licenses/gpl-2.0.html
 
-	.include "magicdefs.asm"
-
 ;
 ; divide
 ;  input:
@@ -77,4 +75,3 @@ div_QQW_1500:
 	ldw	%r5,-56(%r6)
 	lda	%r6,10(%r6)
 	lda	%pc,0(%r3)
-
