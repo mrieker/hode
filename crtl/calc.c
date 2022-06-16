@@ -55,7 +55,7 @@ struct UserDef {
     UserDef ();
     virtual ~UserDef ();
     virtual ComplexD eval () = 0;
-    virtual void print () = 0;
+    virtual void print (FILE *out) = 0;
 };
 
 struct Parm {
@@ -70,7 +70,7 @@ struct UserFunc : UserDef {
     UserFunc ();
     virtual ~UserFunc ();
     virtual ComplexD eval ();
-    virtual void print ();
+    virtual void print (FILE *out);
 };
 
 struct UserVar : UserDef {
@@ -78,7 +78,7 @@ struct UserVar : UserDef {
 
     virtual ~UserVar ();
     virtual ComplexD eval ();
-    virtual void print ();
+    virtual void print (FILE *out);
 };
 
 char *lineptr;
@@ -88,15 +88,18 @@ ComplexD savedvals[MAXSAVED];
 double d2r = 1.0;
 double r2d = 1.0;
 FILE *logfile;
+uint nextsaved;
 UserDef *userdefs;
 
+bool readinput (FILE *in, char **lb_r);
+void execute ();
 bool compute (ComplexD *val_r);
 ComplexD evalexpr (uint preced);
 ComplexD getval ();
 char skipspaces ();
 uint skipvarname ();
 void throwerror (char const *fmt, ...);
-void printval (ComplexD const *val);
+void printval (FILE *out, ComplexD const *val);
 void lprintf (FILE *stream, char const *fmt, ...);
 
 int main (int argc, char **argv)
@@ -123,7 +126,7 @@ int main (int argc, char **argv)
         if (! compute (&val)) return 1;
 
         // print result without any decoration
-        printval (&val);
+        printval (stdout, &val);
 
         // success
         return 0;
@@ -148,39 +151,26 @@ int main (int argc, char **argv)
 
     ReadLine rl;
     int rlrc = rl.open (0);
-    char *linebuf = (rlrc < 0) ? malloc (64) : NULL;
-
-    uint nextsaved = 0;
+    char *linebuf = NULL;
 
     while (1) {
 
         // read line from stdin, exit loop if eof
         if (rlrc < 0) {
-            __size_t siz = allocsz (linebuf);
-            if (fgets (linebuf, siz, stdin) == NULL) break;
-            int len = strlen (linebuf);
-            if (len == 0) break;
-            while (linebuf[len-1] != '\n') {
-                siz += siz / 2;
-                linebuf = realloc (linebuf, siz);
-                if (fgets (linebuf + len, siz - len, stdin) == NULL) goto eof2;
-                len += strlen (linebuf + len);
-            }
-            linebuf[len-1] = 0;
-        eof2:;
-            lineptr = linebuf;
+            if (! readinput (stdin, &linebuf)) break;
         } else {
-            lineptr = linebuf = rl.read (prompt);
+            linebuf = rl.read (prompt);
             if (linebuf == NULL) break;
         }
 
         // maybe log the input line
         if (logfile != NULL) {
-            fprintf (logfile, "%s%s\n", prompt, lineptr);
+            fprintf (logfile, "%s%s\n", prompt, linebuf);
         }
 
         // skip blank lines
         // don't save in readline history
+        lineptr = linebuf;
         if (skipspaces () == 0) {
             if (rlrc >= 0) free (linebuf);
             continue;
@@ -189,98 +179,8 @@ int main (int argc, char **argv)
         // maybe save in readline history
         if (rlrc >= 0) rl.save (linebuf);
 
-        // check for varname=expression
-        char *vareq = strchr (lineptr, '=');
-        if (vareq != NULL) {
-            char *varname = lineptr;
-            uint varnamelen = skipvarname ();
-            if (varnamelen > 0) {
-                UserDef *userdef =  NULL;
-                skipspaces ();
-
-                // if '=' after func/var name, it's a variable definition
-                if (lineptr == vareq) {
-
-                    // compute expression before altering any definitions
-                    ++ lineptr;
-                    UserVar *var = new UserVar;
-                    if (compute (&var->valu)) {
-                        userdef = var;
-                    } else {
-                        delete var;
-                    }
-                } else {
-
-                    // intervening parameter names, get param name list
-                    UserFunc *func = new UserFunc;
-                    Parm **lparm = &func->parms;
-                    do {
-                        char *parmname = lineptr;
-                        uint parmnamelen = skipvarname ();
-                        if (parmnamelen == 0) {
-                            fprintf (stderr, "invalid param name <%s>\n", parmname);
-                            delete func;
-                            goto nextline;
-                        }
-                        Parm *parm = malloc (parmnamelen + sizeof *parm);
-                        parm->next = NULL;
-                        memcpy (parm->name, parmname, parmnamelen);
-                        parm->name[parmnamelen] = 0;
-                        *lparm = parm;
-                        lparm = &parm->next;
-                        skipspaces ();
-                    } while (lineptr != vareq);
-
-                    // save function body
-                    ++ lineptr;
-                    skipspaces ();
-                    func->body = strdup (lineptr);
-                    userdef = func;
-                }
-
-                if (userdef != NULL) {
-
-                    // delete old definition of same name if any
-                    UserDef *ud;
-                    for (UserDef **lud = &userdefs; (ud = *lud) != NULL;) {
-                        if (strcmp (ud->name, userdef->name) == 0) {
-                            *lud = ud->next;
-                            delete ud;
-                        } else {
-                            lud = &ud->next;
-                        }
-                    }
-
-                    // link in new definition
-                    userdef->name = malloc (varnamelen + 1);
-                    memcpy (userdef->name, varname, varnamelen);
-                    userdef->name[varnamelen] = 0;
-                    userdef->next = userdefs;
-                    userdefs = userdef;
-
-                    // print it out
-                    userdef->print ();
-                }
-                continue;
-            }
-            fprintf (stderr, "bad variable name <%.*s>\n", vareq - varname, varname);
-            continue;
-        }
-
-        // compute value
-        ComplexD val;
-        if (compute (&val)) {
-
-            // save result in saved-values array
-            savedvals[nextsaved] = val;
-
-            // print result along with saved-values array index
-            lprintf (stdout, " $%u = ", ++ nextsaved);
-            printval (&val);
-
-            if (nextsaved == MAXSAVED) nextsaved = 0;
-        }
-    nextline:;
+        // execute calculation
+        execute ();
     }
 
     if (logfile != NULL) {
@@ -289,6 +189,125 @@ int main (int argc, char **argv)
     }
 
     return 0;
+}
+
+// read line from input into linebuf
+// extend linebuf as needed to handle whole line
+bool readinput (FILE *in, char **lb_r)
+{
+    char *lb = *lb_r;
+    if (lb == NULL) *lb_r = lb = malloc (64);
+    __size_t siz = allocsz (lb);
+    if (fgets (lb, siz, in) == NULL) return 0;
+    int len = strlen (lb);
+    if (len == 0) return 0;
+    while (lb[len-1] != '\n') {
+        siz += siz / 2;
+        *lb_r = lb = realloc (lb, siz);
+        if (fgets (lb + len, siz - len, in) == NULL) goto rtn1;
+        len += strlen (lb + len);
+    }
+    lb[len-1] = 0;
+rtn1:
+    return 1;
+}
+
+// execute computation
+//  in:
+//   lineptr = first non-blank char in line
+void execute ()
+{
+    // check for varname=expression
+    char *vareq = strchr (lineptr, '=');
+    if (vareq != NULL) {
+        char *varname = lineptr;
+        uint varnamelen = skipvarname ();
+        if (varnamelen > 0) {
+            UserDef *userdef =  NULL;
+            skipspaces ();
+
+            // if '=' after func/var name, it's a variable definition
+            if (lineptr == vareq) {
+
+                // compute expression before altering any definitions
+                ++ lineptr;
+                UserVar *var = new UserVar;
+                if (compute (&var->valu)) {
+                    userdef = var;
+                } else {
+                    delete var;
+                }
+            } else {
+
+                // intervening parameter names, get param name list
+                UserFunc *func = new UserFunc;
+                Parm **lparm = &func->parms;
+                do {
+                    char *parmname = lineptr;
+                    uint parmnamelen = skipvarname ();
+                    if (parmnamelen == 0) {
+                        fprintf (stderr, "invalid param name <%s>\n", parmname);
+                        delete func;
+                        return;
+                    }
+                    Parm *parm = malloc (parmnamelen + sizeof *parm);
+                    parm->next = NULL;
+                    memcpy (parm->name, parmname, parmnamelen);
+                    parm->name[parmnamelen] = 0;
+                    *lparm = parm;
+                    lparm = &parm->next;
+                    skipspaces ();
+                } while (lineptr != vareq);
+
+                // save function body (rest of line)
+                ++ lineptr;
+                skipspaces ();
+                func->body = strdup (lineptr);
+                userdef = func;
+            }
+
+            if (userdef != NULL) {
+                userdef->name = malloc (varnamelen + 1);
+                memcpy (userdef->name, varname, varnamelen);
+                userdef->name[varnamelen] = 0;
+
+                // delete old definition of same name if any
+                UserDef *ud;
+                for (UserDef **lud = &userdefs; (ud = *lud) != NULL;) {
+                    if (strcmp (ud->name, userdef->name) == 0) {
+                        *lud = ud->next;
+                        delete ud;
+                    } else {
+                        lud = &ud->next;
+                    }
+                }
+
+                // link in new definition
+                userdef->next = userdefs;
+                userdefs = userdef;
+
+                // print it out
+                userdef->print (stdout);
+            }
+            return;
+        }
+        fprintf (stderr, "bad variable name <%.*s>\n", vareq - varname, varname);
+        return;
+    }
+
+    // compute value
+    ComplexD val;
+    if (compute (&val)) {
+
+        // save result in saved-values array
+        savedvals[nextsaved] = val;
+
+        // print result along with saved-values array index
+        lprintf (stdout, " $%u = ", ++ nextsaved);
+        printval (stdout, &val);
+
+        if (nextsaved == MAXSAVED) nextsaved = 0;
+    }
 }
 
 // compute expression value
@@ -392,7 +411,7 @@ ComplexD fnasin  () { ComplexD a = getval (); return a.asin ().mulr (r2d); }
 ComplexD fnatan  () { ComplexD a = getval (); return a.atan ().mulr (r2d); }
 ComplexD fncos   () { ComplexD a = getval (); return a.mulr (d2r).cos (); }
 ComplexD fndeg   () { r2d = 180.0 / M_PI; d2r = M_PI / 180.0; return getval (); }
-ComplexD fndump  () { for (UserDef *ud = userdefs; ud != NULL; ud = ud->next) ud->print (); throw ""; }
+ComplexD fndump  () { for (UserDef *ud = userdefs; ud != NULL; ud = ud->next) ud->print (stdout); throw ""; }
 ComplexD fne     () { return ComplexD::make (M_E, 0); }
 ComplexD fnen    () { ComplexD a = getval (); return a.exp (); }
 ComplexD fnhelp  () { int hfd = open (helpname, O_RDONLY, 0); if (hfd < 0) throw "help file missing"; char buf[128]; int rc; while ((rc = read (hfd, buf, sizeof buf)) > 0) stdout->put (buf, rc); close (hfd); throw ""; }
@@ -407,6 +426,33 @@ ComplexD fnsin   () { ComplexD a = getval (); return a.mulr (d2r).sin (); }
 ComplexD fnsq    () { ComplexD a = getval (); return a.sq   (); }
 ComplexD fnsqrt  () { ComplexD a = getval (); return a.sqrt (); }
 ComplexD fntan   () { ComplexD a = getval (); return a.mulr (d2r).tan (); }
+
+ComplexD fnload ()
+{
+    skipspaces ();
+    FILE *f = fopen (lineptr, "r");
+    if (f == NULL) throwerror ("error %d opening load file %s", errno, lineptr);
+    char *lb = NULL;
+    while (readinput (f, &lb)) {
+        lineptr = lb;
+        if (skipspaces ()) execute ();
+    }
+    fclose (f);
+    free (lb);
+    throw "";
+}
+
+ComplexD fnsave ()
+{
+    skipspaces ();
+    FILE *f = fopen (lineptr, "w");
+    if (f == NULL) throwerror ("error %d creating save file %s", errno, lineptr);
+    for (UserDef *ud = userdefs; ud != NULL; ud = ud->next) {
+        ud->print (f);
+    }
+    if (fclose (f) < 0) throwerror ("error %d closing save file %s", errno, lineptr);
+    throw "";
+}
 
 Fn const fntabl[] = {
     { "abs",   fnabs   },
@@ -423,10 +469,12 @@ Fn const fntabl[] = {
     { "hypot", fnhypot },
     { "im",    fnim    },
     { "ln",    fnln    },
+    { "load",  fnload  },
     { "pi",    fnpi    },
     { "quit",  fnquit  },
     { "rad",   fnrad   },
     { "re",    fnre    },
+    { "save",  fnsave  },
     { "sin",   fnsin   },
     { "sq",    fnsq    },
     { "sqrt",  fnsqrt  },
@@ -618,13 +666,13 @@ ComplexD UserFunc::eval ()
 }
 
 // print user func definition
-void UserFunc::print ()
+void UserFunc::print (FILE *out)
 {
-    lprintf (stdout, " %s", this->name);
+    lprintf (out, " %s", this->name);
     for (Parm *p = this->parms; p != NULL; p = p->next) {
-        lprintf (stdout, " %s", p->name);
+        lprintf (out, " %s", p->name);
     }
-    lprintf (stdout, " = %s\n", this->body);
+    lprintf (out, " = %s\n", this->body);
 }
 
 // uservar vtable
@@ -639,21 +687,21 @@ ComplexD UserVar::eval ()
 }
 
 // print user var definition
-void UserVar::print ()
+void UserVar::print (FILE *out)
 {
-    lprintf (stdout, " %s = ", this->name);
-    printval (&this->valu);
+    lprintf (out, " %s = ", this->name);
+    printval (out, &this->valu);
 }
 
 // print complex number
-void printval (ComplexD const *val)
+void printval (FILE *out, ComplexD const *val)
 {
     if (val->imag == 0.0) {
-        lprintf (stdout, "%.16lg\n", val->real);
+        lprintf (out, "%.16lg\n", val->real);
     } else if (val->real == 0.0) {
-        lprintf (stdout, "j %.16lg\n", val->imag);
+        lprintf (out, "j %.16lg\n", val->imag);
     } else {
-        lprintf (stdout, "%.16lg j %.16lg = %.16lg @ %s %.16lg\n",
+        lprintf (out, "%.16lg j %.16lg = %.16lg @ %s %.16lg\n",
                 val->real, val->imag, val->abs (),
                 (r2d == 1.0) ? "rad" : "deg", val->arg () * r2d);
     }

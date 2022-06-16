@@ -60,9 +60,11 @@ input line format:
                     eg, rad cos (pi/3) gives 0.5
 
     commands can be given on input line by themselves:
-        dump    prints out all named variables and their values
-        help    prints out this text
-        quit    exits the calculator program
+        dump        prints out all named variables and their values
+        help        prints out this text
+        load fn     loads user defined variables and functions from file
+        quit        exits the calculator program
+        save fn     saves user defined variables and functions into file
 
 user defined functions:
     funcname parm1 ... = expression

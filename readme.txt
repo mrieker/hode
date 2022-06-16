@@ -3,6 +3,7 @@
 
 Website:  https://www.outerworldapps.com/hode
 
+Uses a RaspberryPi for memory and IO (not needed for simulator).
 Requires a Linux computer (x86 or raspi) to build software.
 KiCad used to do PCB layouts.
 Must have GNU C++ compiler, Java 8 or better dev kit.
@@ -24,6 +25,21 @@ Directories:
                 $ ./runit.sh circus.hex < test01.circ   ## runs in simlator (x86 or arm, no hode hardware required)
                 $ ./runhw.sh circus.hex < test01.circ   ## runs on hode hardware that this raspi is plugged into
 
+    de0      - DE0-Nano FPGA implementation (in verilog)
+               requires de0-nano board, raspberry pi, kicads/de0raspi interconnect board
+               use quartus to compile verilog in the de0 directory and program the de0-nano
+               populate interconnect board with two 2x20 connectors and 26 33-ohm resistors
+               plug raspi into the raspi connector and de0-nano gpio 1 into the de0 connector
+               should be able to run any hode programs such as:
+
+                # desktop calculator
+                $ cd crtl
+                $ ./runhw.sh calc.hex
+
+                # rolling lights
+                $ cd driver
+                $ ./raspictl rollights.hex
+
     driver   - raspi control program and hardware test programs
                 $ make
                 $ cd km
@@ -44,6 +60,7 @@ Directories:
     goodpcbs - good pcb files (routing completed, including netlist and parts list files)
 
     kicads   - other kicad files
+                de0raspi - interconnect for de0 nano and raspberry pi
                 IOW56Paddle - IO-Warrior-56 paddles for board-level testing
                 PowerDist - power distribution board - connects edge power to power supply
 
@@ -73,9 +90,6 @@ HOW TO BUILD
     Run drivers/iow56list.armv7l on the raspi to get the serial number for each one at a time.
     Label them A, C, I, D with little stickers and put the serial numbers in netgen/iow56sns.si.
 
-    When soldering the 2x20 stackable connectors to the boards, make sure they are mounted tightly
-    on the boards so they will mate up when stacking the boards.
-
     When populating the main boards, start with the diodes as they are uniquely marked.  Of course
     make sure the bands on the diodes match the bands on the board.  Next do the 2.7K resistors as
     they are among the diodes.  Next come the 680 resistors, they go near the transistor collector
@@ -83,15 +97,22 @@ HOW TO BUILD
     capacitors that go next to the transistor collector and emitter leads.  Finally put in the
     transistors then the edge connectors.
 
+    When soldering the 2x20 stackable connectors to the boards, make sure they are mounted tightly
+    on the boards so they will mate up when stacking the boards.  Be very careful when pulling the
+    boards apart that you do not bend the pins on the stackable connectors.  Rock them little by
+    little until each one comes apart.
+
     Optionally make an ledboard.pcb and populate.  It can be used for diagnostics as it shows the
     state of the bus connector pins.  It can be plugged into the other boards one at a time or in
-    any combination.  It is not needed for testing as the testing is all done via the paddles, but
-    can make it easier to track down any problems.
+    any combination.  It is not required for testing as the testing is all done via the paddles, but
+    can make it easier to track down any problems.  Be careful to note 3 positions are populated
+    with 2N3906s instead of the usual 2N3904s and the LEDs are reversed, as the _IR_WE, _PSW_IECLR,
+    _PSW_REB signals are active low.
 
     Make a seqboard.pcb board and populate with diodes, resistors, capacitors, transistors, LEDs,
-    connectors.  Connect to a variable power supply and turn slowly up to 5A, it should draw under
+    connectors.  Connect to a variable power supply and turn slowly up to 5V, it should draw under
     1.5A.  Plug in the 4 paddles (actually just need C and I paddles).  Run the 'drivers/seqtester
-    -cpuhz 200 -loop' script to test it.  The paddles are limited to 200Hz so thst's why the '-cpuhz
+    -cpuhz 200 -loop' script to test it.  The paddles are limited to 200Hz so that's why the '-cpuhz
     200' option is needed.
 
     Make a rasboard.pcb board and populate as usual.  You will also need a 2x20 connector for the
@@ -128,4 +149,10 @@ HOW TO BUILD
 
     Then you can go to the crtl directory and run a program with the ./runhw.sh script, such as
     './runhw.sh printpi.hex' or './runhw.sh circus.hex < test01.circ'.
+
+    Note that it doesn't matter what order the boards are stacked in, electrically speaking.  You can
+    shuffle them around for testing and debugging.  But it is best to put the sequencer board on the
+    front when you get it all working so you can see the blinking state LEDs.  If you make the optional
+    LED board, it goes in front of the sequencer board and does not block any of the sequencer board's
+    LEDs.
 

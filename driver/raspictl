@@ -1,4 +1,6 @@
 #!/bin/bash
 dz=$0
-. `dirname $0`/iow56sns.si
-exec $0.`uname -m` "$@"
+dd=`dirname $dz`
+$dd/loadmod.sh
+. $dd/iow56sns.si
+exec $dz.`uname -m` "$@"
